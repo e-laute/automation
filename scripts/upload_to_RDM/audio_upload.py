@@ -1,7 +1,11 @@
 """
 Upload-script for the E-LAUTE audio files to the TU-RDM platform.
 
+Before running make sure that the IDs in the id_table (Sheets) are well formed
+and the audio files in the Drive folder are named so that the full elauteId is present.
+
 Usage:
+. .venv/bin/activate
 cd scripts
 python -m upload_to_RDM.audio_upload
 
@@ -332,22 +336,37 @@ def clean_work_ids(form_responses_df):
     split_ids = form_responses_df["work_id_forms"].str.split()
     form_responses_df["work_id"] = split_ids.str[-1]
     form_responses_df["work_id_2"] = split_ids.str[-2]
+    form_responses_df["work_id_3"] = split_ids.str[-3]
     form_responses_df["work_id_2"] = form_responses_df["work_id_2"].fillna("")
+    form_responses_df["work_id_3"] = form_responses_df["work_id_3"].fillna("")
 
-    special_ids = ["A-Wn_Mus.Hs._18688_n16"]
-    for special_id in special_ids:
+    grouped_ids = {
+        "A-Wn_Mus.Hs._18688_n16": 2,
+        "A-Wn_Mus.Hs._41950_n01": 3,
+    }
+    for leading_id, group_size in grouped_ids.items():
+        marker_column = f"work_id_{group_size}"
+        if marker_column not in form_responses_df:
+            continue
+
         form_responses_df.loc[
-            form_responses_df["work_id_2"].str.contains(special_id, na=False),
+            form_responses_df[marker_column].str.contains(leading_id, na=False),
             "work_id",
         ] = (
-            special_id + ", " + form_responses_df["work_id"]
+            leading_id
+            + ", "
+            + form_responses_df[f"work_id_{group_size - 1}"]
+            + ", "
+            + form_responses_df["work_id"]
+            if group_size == 3
+            else leading_id + ", " + form_responses_df["work_id"]
         )
 
     form_responses_df["work_id"] = form_responses_df["work_id"].apply(
         _normalize_work_id_field
     )
 
-    form_responses_df.drop(columns=["work_id_2"], inplace=True)
+    form_responses_df.drop(columns=["work_id_2", "work_id_3"], inplace=True)
 
     return form_responses_df
 
@@ -453,7 +472,7 @@ def build_metadata_df(form_responses_df, id_table):
         if not text:
             return pd.Series(["", ""])
         parts = [part.strip() for part in text.split(",", 1)]
-        if len(parts) == 2:
+        if len(parts) >= 2:
             return pd.Series(parts)
         return pd.Series([text, ""])
 
@@ -481,8 +500,16 @@ def build_metadata_df(form_responses_df, id_table):
     )
 
     def extract_before_n(work_id):
-        match = re.search(r"(.+?)(?:\s|_n\d+)", work_id)
-        return match.group(1) if match else work_id
+        if pd.isna(work_id):
+            return pd.NA
+
+        text = str(work_id).strip()
+        if not text:
+            return pd.NA
+
+        first_work_id = text.split(", ", 1)[0]
+        match = re.search(r"(.+?)(?:\s|_n\d+)", first_work_id)
+        return match.group(1) if match else first_work_id
 
     metadata_df["source_id"] = metadata_df["work_id"].apply(extract_before_n)
 
