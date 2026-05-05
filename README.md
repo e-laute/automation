@@ -230,7 +230,8 @@ Generates provenance metadata from the caller repository's MEI files and uploads
 
 ### `release_actions.yml` — TU-RDM upload
 
-Uploads all MEI files of a repository to the TU Wien Research Data Management platform. Requires a TU-RDM API token stored as a secret in the caller repository.
+Uploads all MEI files of a repository to the TU Wien Research Data Management platform. Requires a TU-RDM API token stored as a secret in the caller repository. This workflow is triggered by creating a release of the caller repository.
+All scripts needed for this workflow are stored in `scripts/upload_to_RDM/`.
 
 ---
 
