@@ -29,7 +29,7 @@ jobs:
       - name: Checkout shared repository
         uses: actions/checkout@v4
         with:
-          repository: e-laute/E-LAUTE_GH_Actions
+          repository: e-laute/automation
           ref: main
           path: shared-actions
 
