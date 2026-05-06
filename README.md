@@ -1,7 +1,7 @@
 # E-LAUTE GitHub Actions — Central Repository
 
 This is the **central repository** for the [E-LAUTE digital edition](https://e-laute.info) automation setup.
-It contains the GitHub Actions workflow definitions and Python processing scripts that operate on MEI files stored in the project's many caller repositories.
+It contains the automation entry-point shell script and Python processing scripts that operate on MEI files stored in the project's many caller repositories.
 
 ---
 
@@ -13,67 +13,26 @@ The three components are:
 ```
 mei-friend (browser)
       │
-      │  triggers via GitHub API
+      │  triggers via GitHub API (workflow_dispatch)
       ▼
 Caller repository               ← one per source/manuscript, contains MEI files
-  .github/workflows/caller.yml  ← thin relay workflow, points to this central repo
+  .github/workflows/caller.yml  ← generic relay workflow
       │
-      │  calls workflow_call
+      │  checks out central repo, runs scripts/automation/run_automation.sh
       ▼
 This repository  (e-laute/automation)   ← you are here
-  .github/workflows/       ← reusable workflow definitions
-  scripts/                 ← Python processing scripts
+  scripts/automation/run_automation.sh  ← entry point: sets up Python environment and runs coordinator.py
+  scripts/                              ← Python processing scripts
       │
-      │  checks out both repos, runs scripts, commits results
       ▼
-Caller repository          ← results committed back here
+Caller repository               ← results committed back here
 ```
 
 When a user selects a work package in mei-friend and clicks "Run workflow", the event travels:
 
 1. mei-friend → caller repository (via GitHub API `workflow_dispatch`)
-2. caller repository → this central repository (via `workflow_call`)
-3. This repository checks out both itself and the caller repository into a shared GitHub Actions runner environment, runs the appropriate script, and commits any changes back to the caller repository.
-
----
-
-<!--
-## Repository structure
-
-```
-automation/
-│
-├── .github/workflows/
-│   ├── run_coordinator.yml               # Process a single MEI file with a work package
-│   ├── run_coordinator_multiple_files.yml# Process all matching MEI files in a repo
-│   ├── run_validation.yml                # Validate all TEI/MEI encodings
-│   ├── ensure_corrs_have_cert.yml        # Ensure all <corr> elements carry @cert
-│   ├── parse_and_upload_provenance_data.yml  # Upload provenance data to GraphDB
-│   └── release_actions.yml              # Upload MEI files to TU-RDM
-│
-└── scripts/
-    ├── coordinator.py          # Core orchestrator: parses file, runs scripts, writes back
-    ├── find_files_wrapper.py   # Batch wrapper: finds all matching files, calls coordinator
-    ├── script_collection.py    # Library of reusable MEI transformation functions
-    ├── work_package_example.json  # Work package definitions used in production
-    │                              # (despite the "_example" suffix, this is the live
-    │                              #  config referenced by the workflows)
-    ├── utils.py                # Shared helpers (XML utilities, GitHub summary output)
-    ├── validate_encodings.py   # Validation script
-    ├── generate_provenance.py  # Provenance metadata generation
-    ├── upload_to_graphdb.py    # GraphDB upload
-    ├── ensure_corrs_have_cert.py  # <corr>/@cert checker
-    ├── derive-alternate-tablature-notation-types.py
-    ├── release_pipeline.py     # TU-RDM release orchestration
-    ├── template_script.py      # Starting point for new scripts (see "Writing new scripts")
-    ├── upload_to_RDM/          # Helpers for TU-RDM upload
-    ├── test_meis/              # Sample MEI files used by testing_scripts.py
-    │                           # for running scripts locally before pushing
-    └── WIP/                    # Work-in-progress scripts — not yet production-ready;
-                                # do not reference these from work packages
-```
-
-Additionally, [`update_secrets.sh`](update_secrets.sh) at the repository root is a helper for batch-updating the GitHub Actions secrets (e.g. GraphDB credentials, RDM API tokens) across the many caller repositories in the E-LAUTE project. Run it locally with the `gh` CLI authenticated; it iterates over the configured caller repos and pushes the current secret values. -->
+2. The caller workflow checks out this central repository and runs `scripts/automation/run_automation.sh`, passing the dispatch inputs (work package, file path, parameters).
+3. The automation script runs the coordinator against the caller repository's data and commits any changes back.
 
 ---
 
@@ -188,18 +147,7 @@ Each entry describes one named operation selectable in mei-friend:
 
 ## Other workflows
 
-Additionally to processing via mei-friend using work packages, this repository contains other GitHub Actions workflows for various operations on the caller repositories' MEI files.
-
-### `run_coordinator.yml` — single file
-
-Runs the coordinator on one specific MEI file, usually called from mei-friend, but can also be dispatched directly from the caller repository.
-
-Inputs:
-
-- `workpackage_id` — the work package to execute
-- `filepath` — path to the MEI file within the caller repository
-- `addargs` — additional parameters as a JSON string, e.g. `{"sbInterval": 4}`
-- `commit_message` — commit message for the result
+Additionally to processing via mei-friend using work packages, this repository contains GitHub Actions workflows for operations that run across all files in a caller repository or interact with external services.
 
 ### `run_coordinator_multiple_files.yml` — batch processing
 
@@ -216,13 +164,6 @@ Inputs:
 ### `run_validation.yml` — encoding validation
 
 Runs [validate_encodings.py](scripts/validate_encodings.py) across all files in the caller repository.
-
-<!-- ### `ensure_corrs_have_cert.yml` — quality check
-
-Ensures every `<corr>` element in a given MEI file carries a `@cert` attribute.
-
-Inputs:
-- `filename` — path to the MEI file -->
 
 ### `parse_and_upload_provenance_data.yml` — provenance upload
 
@@ -272,15 +213,13 @@ Once the function exists, register it as a work package entry in `work_packages.
 
 ## Connecting a caller repository to this central repository
 
-In any caller repository (set up from the [caller template](https://github.com/mei-friend/caller-template)), open `.github/workflows/caller.yml` and replace the existing `uses:` line under the relay job with a reference to the appropriate workflow in this repository. For the standard single-file work package flow, that is `run_coordinator.yml`:
+Create a caller repository from the [caller template](https://github.com/mei-friend/caller-template) — no changes to `caller.yml` are needed.
 
-```yaml
-jobs:
-  call-shared:
-    uses: e-laute/automation/.github/workflows/run_coordinator.yml@main
+Then point mei-friend's **"Custom configuration"** field at the raw URL of `work_packages.json` in this repository:
+
+```
+https://raw.githubusercontent.com/e-laute/automation/refs/heads/main/scripts/work_packages.json
 ```
 
-If you need batch processing, validation, or one of the other operations listed under [Available workflows](#available-workflows), point `uses:` at the corresponding workflow file instead — or add additional jobs to `caller.yml` if you want several workflows callable from the same caller repository. The receiving workflow's input schema must match what `caller.yml` sends; the workflows in this repository follow the same input shape as the generic `mei-friend/automation` central workflow.
-
-Then point mei-friend's **"Custom configuration"** field at the raw URL of `work_packages.json` in this repository.
+The JSON file already contains the `central_repository`, `branch`, and `automation` fields pointing to this repository.
 The E-LAUTE work packages will appear in the mei-friend GitHub Actions panel, ready to use.
