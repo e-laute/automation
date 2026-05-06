@@ -20,7 +20,7 @@ Caller repository               ← one per source/manuscript, contains MEI file
       │
       │  calls workflow_call
       ▼
-This repository  (e-laute/E-LAUTE_GH_Actions)   ← you are here
+This repository  (e-laute/automation)   ← you are here
   .github/workflows/       ← reusable workflow definitions
   scripts/                 ← Python processing scripts
       │
@@ -41,7 +41,7 @@ When a user selects a work package in mei-friend and clicks "Run workflow", the 
 ## Repository structure
 
 ```
-E-LAUTE_GH_Actions/
+automation/
 │
 ├── .github/workflows/
 │   ├── run_coordinator.yml               # Process a single MEI file with a work package
@@ -277,7 +277,7 @@ In any caller repository (set up from the [caller template](https://github.com/m
 ```yaml
 jobs:
   call-shared:
-    uses: e-laute/E-LAUTE_GH_Actions/.github/workflows/run_coordinator.yml@main
+    uses: e-laute/automation/.github/workflows/run_coordinator.yml@main
 ```
 
 If you need batch processing, validation, or one of the other operations listed under [Available workflows](#available-workflows), point `uses:` at the corresponding workflow file instead — or add additional jobs to `caller.yml` if you want several workflows callable from the same caller repository. The receiving workflow's input schema must match what `caller.yml` sends; the workflows in this repository follow the same input shape as the generic `mei-friend/automation` central workflow.

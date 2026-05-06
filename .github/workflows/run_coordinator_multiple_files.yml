@@ -42,7 +42,7 @@ jobs:
       - name: Checkout shared repository
         uses: actions/checkout@v4
         with:
-          repository: e-laute/E-LAUTE_GH_Actions
+          repository: e-laute/automation
           ref: main
           path: shared-actions
 
@@ -64,11 +64,11 @@ jobs:
       - name: Run coordinator script
         run: |
           cmd="python shared-actions/scripts/find_files_wrapper.py -w ${{ inputs.workpackage_id }}"
-          
+
           [ -n '${{ inputs.filetype }}' ] && cmd="$cmd -ft ${{ inputs.filetype }}"
           [ -n '${{ inputs.exclude }}' ]  && cmd="$cmd -e '${{ inputs.exclude }}'"
           [ -n '${{ inputs.addargs }}' ]  && cmd="$cmd -a '${{ inputs.addargs }}'"
-          
+
           $cmd
 
       # 6. Commit changes
