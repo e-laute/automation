@@ -1,26 +1,31 @@
-[
-  {
-    "id": "template_id",
-    "label": "Template label",
-    "description": "A meaningful description of what the work package does goes here. The scripts listed in the 'scripts' field will be executed in order when this work package is run. If 'commitResult' is true, the result of the last script will be committed back to the caller repository.",
-    "userFacing": true,
-    "params": {
-      "firstParam": {
-        "type": "Number",
-        "default": 5,
-        "description": "A meaningful description of what this parameter does goes here. The default value is optional, but if included, it must be of the type specified in the 'type' field."
+{
+  "central_repository": "e-laute/automation",
+  "branch": "main",
+  "automation": "automation/run_automation.sh",
+  "work_packages": [
+    {
+      "id": "template_id",
+      "label": "Template label",
+      "description": "A meaningful description of what the work package does goes here. The scripts listed in the 'scripts' field will be executed in order when this work package is run. If 'commitResult' is true, the result of the last script will be committed back to the caller repository.",
+      "userFacing": true,
+      "params": {
+        "firstParam": {
+          "type": "Number",
+          "default": 5,
+          "description": "A meaningful description of what this parameter does goes here. The default value is optional, but if included, it must be of the type specified in the 'type' field."
+        },
+        "secondParam": {
+          "type": "String",
+          "default": "optional default value",
+          "description": "A meaningful description of what this parameter does goes here. The default value is optional, but if included, it must be of the type specified in the 'type' field."
+        }
       },
-      "secondParam": {
-        "type": "String",
-        "default": "optional default value",
-        "description": "A meaningful description of what this parameter does goes here. The default value is optional, but if included, it must be of the type specified in the 'type' field."
-      }
-    },
-    "scripts": [
-      "script_collection.first_script",
-      "script_collection.second_script",
-      "script_collection.third_script"
-    ],
-    "commitResult": true
-  }
-]
+      "scripts": [
+        "script_collection.first_script",
+        "script_collection.second_script",
+        "script_collection.third_script"
+      ],
+      "commitResult": true
+    }
+  ]
+}
