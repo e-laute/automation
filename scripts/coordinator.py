@@ -50,8 +50,6 @@ def execute_workpackage(filepath: Path, workpackage: dict, params: dict):
         raise ValueError("Faulty work package, 'scripts' cannot be empty")
 
     active_dom, tree = parse_and_wrap_dom(filepath)
-
-    # E-LAUTE specific, returns empty list for now
     context_doms = get_context_doms(filepath)
 
     # scripts in the JSON is a list of module-to-function paths (dir.subdir.module.func)
@@ -80,14 +78,6 @@ def execute_workpackage(filepath: Path, workpackage: dict, params: dict):
         # scripts take active_dom:dict, context_dom:list[dict], params:dict
         try:
             script_result = current_func(active_dom, context_doms, **params)
-            if isinstance(script_result, tuple) and len(script_result) == 3:
-                active_dom, output_message_current, summary_message = (
-                    script_result
-                )
-            else:
-                raise ValueError(
-                    f"Script {func_name} must return a tuple of length 3"
-                )
             output_message_total += (
                 f"Script {func_name} was successful"
                 f"{', says:\n' + output_message_current if output_message_current else '.'}"
@@ -111,7 +101,14 @@ def execute_workpackage(filepath: Path, workpackage: dict, params: dict):
                 + f"Script {func_name} failed, says:\n{e}\n\nNo further scripts executed and no files changed"
             )
             write_to_console(output_message_total)
-            return 1
+            error_message = f"Script {func_name} failed on {filepath}, says:\n{e}\n\nNo further scripts executed and no files changed"
+            return summary_message, error_message
+        if isinstance(script_result, tuple) and len(script_result) == 3:
+            active_dom, output_message_current, summary_message = script_result
+        else:
+            raise ValueError(
+                f"Script {func_name} must return a tuple of length 3"
+            )
 
     if workpackage["commitResult"]:
         edit_appInfo(active_dom["dom"], workpackage["label"])
@@ -124,7 +121,7 @@ def execute_workpackage(filepath: Path, workpackage: dict, params: dict):
         + output_message_total
     )
     write_to_console(output_message_total)
-    return 0
+    return summary_message, error_message
 
 
 def get_context_doms(filepath: Path):
@@ -188,7 +185,9 @@ def determine_notationtype(filepath: Path):
     return notationtype_re.group(1)
 
 
-def main(workpackage_id: str, filepath: str, addargs: list):
+def main(
+    workpackage_id: str, workpackage_json: str, filepath: str, parameters: str
+):
     """
     Parses Arguments, selects file, calls coordinator on files with workpackage
     """
@@ -222,9 +221,11 @@ def main(workpackage_id: str, filepath: str, addargs: list):
         print(f"::error::File not found: '{mei_path}'")
         return 2
 
-    execute_workpackage(mei_path, workpackage, dic_add_args)
+    summary_message, error_message = execute_workpackage(
+        mei_path, workpackage, dic_add_args
+    )
     print("::notice::Process completed successfully")
-    return 0
+    return summary_message, error_message
 
 
 def parse_addargs(addargs: str):
