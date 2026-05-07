@@ -1,0 +1,155 @@
+{
+  "central_repository": "e-laute/automation",
+  "branch": "main",
+  "automation": "automation/run_automation.sh",
+  "work_packages": [
+    {
+      "id": "add_sbs",
+      "label": "Add system breaks",
+      "description": "Adds <sb/> every n measures",
+      "userFacing": true,
+      "params": {
+        "sbInterval": {
+          "type": "Number",
+          "default": 5
+        }
+      },
+      "scripts": ["script_collection.add_sbs_every_n"],
+      "commitResult": true
+    },
+    {
+      "id": "add_section_and_foldir_to_ed",
+      "label": "Add section and dirs with folio to ed from getElemFrom",
+      "description": "takes help_dom as context_dom and finds position of page beginnigs, adds them to ed_GLT or ed_CMN",
+      "userFacing": true,
+      "params": {
+        "getElemFrom": {
+          "type": "String",
+          "default": "dipl_GLT"
+        }
+      },
+      "scripts": ["script_collection.add_section_foldir_from_context_to_ed"],
+      "commitResult": true
+    },
+    {
+      "id": "prepare_ed_GLT_from_fronimo",
+      "label": "Prepare ed_GLT from Fronimo",
+      "description": "Add Header, Facs, Section, Finis, sbs. getElemfrom will be source for header, facs, sections, if no finis should be added, leave empty",
+      "userFacing": true,
+      "params": {
+        "getElemFrom": {
+          "type": "String",
+          "default": "dipl_GLT"
+        },
+        "sbInterval": {
+          "type": "Number",
+          "default": 5
+        },
+        "projectstaff": {
+          "type": "String"
+        },
+        "finisText": {
+          "type": "String",
+          "default": ""
+        }
+      },
+      "scripts": [
+        "script_collection.add_header_from_context",
+        "script_collection.add_facs_from_context",
+        "script_collection.add_section_foldir_from_context_to_ed",
+        "script_collection.add_finis_to_last_measure",
+        "script_collection.add_sbs_every_n"
+      ],
+      "commitResult": true
+    },
+    {
+      "id": "add_finis",
+      "label": "Add finis with finis text to last measure",
+      "description": "creates finistext in dir at last tstamp of last measure",
+      "userFacing": true,
+      "params": {
+        "finisText": {
+          "type": "String",
+          "default": ""
+        }
+      },
+      "scripts": ["script_collection.add_finis_to_last_measure"],
+      "commitResult": true
+    },
+    {
+      "id": "add_facs",
+      "label": "Add facsimile from getElemFrom",
+      "description": "takes help_dom as context_dom and finds position of page beginnigs, adds them to ed_GLT or ed_CMN",
+      "userFacing": true,
+      "params": {
+        "getElemFrom": {
+          "type": "String",
+          "default": "dipl_GLT"
+        }
+      },
+      "scripts": ["script_collection.add_facs_from_context"],
+      "commitResult": true
+    },
+    {
+      "id": "error_run",
+      "label": "create_runtime_error",
+      "description": "Calls add_sbs_every_n and then runtime_error",
+      "userFacing": true,
+      "params": {
+        "sbInterval": {
+          "type": "Number",
+          "default": 5
+        }
+      },
+      "scripts": [
+        "script_collection.add_sbs_every_n",
+        "testing_scripts.runtime_error",
+        "script_collection.add_sbs_every_n"
+      ],
+      "commitResult": true
+    },
+    {
+      "id": "remove_and_add_sbs",
+      "label": "Remove all system breaks and add again",
+      "description": "Removes all <sb/>s and adds <sb/> every n measures",
+      "userFacing": true,
+      "params": {
+        "sbInterval": {
+          "type": "Number",
+          "default": 5
+        }
+      },
+      "scripts": [
+        "script_collection.remove_all_sbs",
+        "script_collection.add_sbs_every_n"
+      ],
+      "commitResult": true
+    },
+    {
+      "id": "add_header_from_context",
+      "label": "Add Header from getElemFrom",
+      "description": "Adds header from dipl GLT with needed adjustments for all other filetypes",
+      "userFacing": true,
+      "params": {
+        "projectstaff": {
+          "type": "String"
+        },
+        "getElemFrom": {
+          "type": "String",
+          "default": "dipl_GLT"
+        }
+      },
+      "scripts": ["script_collection.add_header_from_context"],
+      "commitResult": true
+    },
+    {
+      "id": "compare_mnums",
+      "label": "Compare number of measures",
+      "description": "Compares number of measures in active and context files and prints number of measures of each file. Compares last measure number and accounts for pickup measures and invisible measures.",
+      "userFacing": true,
+      "params": {},
+      "scripts": ["script_collection.compare_mnums"],
+      "commitResult": false
+    }
+  ]
+}

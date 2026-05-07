@@ -47,5 +47,4 @@ jobs:
       - name: Run shared Python script
         run: |
           export CALLER_REPO_PATH="${{ github.workspace }}/caller-repo"
-          export SECRET="${{ env.TEST_SECRET }}"
           python shared-actions/scripts/validate_encodings.py
