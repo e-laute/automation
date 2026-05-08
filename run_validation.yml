@@ -1,0 +1,50 @@
+name: Validate TEI and MEI encodings
+
+on:
+  workflow_call:
+    inputs:
+      repo-path:
+        description: "Relative path to caller repo checkout"
+        required: false
+        type: string
+        default: "."
+
+jobs:
+  run-shared-script:
+    runs-on: ubuntu-latest
+    steps:
+      # 1. Checkout caller repository
+      - name: Checkout caller repository
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.repository }}
+          ref: ${{ github.ref }}
+          path: caller-repo
+
+      # 2. Checkout shared repository (this repo)
+      - name: Checkout shared repository
+        uses: actions/checkout@v4
+        with:
+          repository: e-laute/automation
+          ref: main
+          path: shared-actions
+
+      # 3. Setup Python
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: "pip"
+          cache-dependency-path: "shared-actions/scripts/requirements-dispatch.txt"
+
+      # 4. Install dependencies
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r shared-actions/scripts/requirements-dispatch.txt
+
+      # 5. Run the shared script *on the caller repo*
+      - name: Run shared Python script
+        run: |
+          export CALLER_REPO_PATH="${{ github.workspace }}/caller-repo"
+          python shared-actions/scripts/validate_encodings.py
