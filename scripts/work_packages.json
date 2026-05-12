@@ -1,7 +1,7 @@
 {
   "central_repository": "e-laute/automation",
   "branch": "main",
-  "automation": "automation/run_automation.sh",
+  "automation_path": "automation/run_automation.sh",
   "work_packages": [
     {
       "id": "add_sbs",
