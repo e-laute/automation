@@ -3,7 +3,6 @@ import os
 from lxml import etree
 from datetime import date
 
-
 ns = {
     "mei": "http://www.music-encoding.org/ns/mei",
     "xml": "http://www.w3.org/XML/1998/namespace",
@@ -101,7 +100,9 @@ def dur_length(elem: etree.Element, ignore=["sic", "orig"]):
             continue
         if "dur" in child.attrib:
             dur = float(child.attrib.get("dur"))
-            totaldur += 2 / dur - 1 / (dur * 2 ** int(child.attrib.get("dots", "0")))
+            totaldur += 2 / dur - 1 / (
+                dur * 2 ** int(child.attrib.get("dots", "0"))
+            )
         else:
             totaldur += dur_length(child)
     return totaldur
