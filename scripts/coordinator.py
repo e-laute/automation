@@ -153,10 +153,10 @@ def get_context_doms(filepath: Path):
         try:
             other_files.append(parse_and_wrap_dom(f)[0])
         except NameError:
-            context_doms_excluded_message += "\n" + f.stem
+            context_doms_excluded_message += "\n  - " + f.stem + f.suffix
         
     if context_doms_excluded_message:
-        context_doms_excluded_message = "Warning\nThe following files where excluded as context doms for not adhering to E-Laute naming conventions:\n" + context_doms_excluded_message
+        context_doms_excluded_message = "Warning\nThe following files where excluded as context doms for not adhering to E-Laute naming conventions:" + context_doms_excluded_message
     return other_files, context_doms_excluded_message
 
 
@@ -239,7 +239,6 @@ def main(
         mei_path, workpackage, dic_add_args
     )
     print("::notice::Process completed successfully")
-    return 0
     return summary_message, error_message
 
 
@@ -337,11 +336,9 @@ def initialize_parser():
 if __name__ == "__main__":
     parser = initialize_parser()
     args = parser.parse_args()
-    sys.exit(
-        main(
+    main(
             workpackage_id=args.workpackage_id,
             workpackage_json=args.workpackage_json,
             filepath=args.filepath,
             parameters=args.parameters,
-        )
     )
