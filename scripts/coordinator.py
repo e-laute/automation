@@ -11,7 +11,7 @@ from pathlib import Path
 
 from lxml import etree
 
-from utils import edit_appInfo, write_to_console, write_to_github_summary
+from utils import edit_appInfo, write_to_console
 
 JSON_TYPE_TO_PYTHON_TYPE = {"Number": int, "String": str}
 
@@ -78,11 +78,21 @@ def execute_workpackage(filepath: Path, workpackage: dict, params: dict):
         # scripts take active_dom:dict, context_dom:list[dict], params:dict
         try:
             script_result = current_func(active_dom, context_doms, **params)
+            if isinstance(script_result, tuple) and len(script_result) == 3:
+                active_dom, output_message_current, summary_message_current = (
+                    script_result
+                )
+            else:
+                raise ValueError(
+                    f"Script {func_name} must return a tuple of length 3"
+                )
+
             output_message_total += (
                 f"Script {func_name} was successful"
                 f"{', says:\n' + output_message_current if output_message_current else '.'}"
                 "\n\n"
             )
+            summary_message += summary_message_current
         except TypeError as e:
             if "missing" in str(e):
                 # Extract argument names inside single quotes
@@ -103,12 +113,6 @@ def execute_workpackage(filepath: Path, workpackage: dict, params: dict):
             write_to_console(output_message_total)
             error_message = f"Script {func_name} failed on {filepath}, says:\n{e}\n\nNo further scripts executed and no files changed"
             return summary_message, error_message
-        if isinstance(script_result, tuple) and len(script_result) == 3:
-            active_dom, output_message_current, summary_message = script_result
-        else:
-            raise ValueError(
-                f"Script {func_name} must return a tuple of length 3"
-            )
 
     if workpackage["commitResult"]:
         edit_appInfo(active_dom["dom"], workpackage["label"])
@@ -191,7 +195,7 @@ def main(
     """
     Parses Arguments, selects file, calls coordinator on files with workpackage
     """
-    print("We are in coordinator.main!")
+    # print("We are in coordinator.main!")
     # TODO misses -nt --notationtype, -e --exclude
     # For now assumes python coordinator.py filepath workpackage additional arguments
     # TODO check for validity of workpackage x filetype, multiple files
