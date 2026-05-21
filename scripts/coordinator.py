@@ -239,6 +239,7 @@ def main(
         mei_path, workpackage, dic_add_args
     )
     print("::notice::Process completed successfully")
+    return 0
     return summary_message, error_message
 
 
