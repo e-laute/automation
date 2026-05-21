@@ -6,7 +6,6 @@ import argparse
 import importlib
 import json
 import re
-import sys
 from pathlib import Path
 
 from lxml import etree
@@ -49,7 +48,6 @@ def execute_workpackage(filepath: Path, workpackage: dict, params: dict):
     if not scripts_list:
         raise ValueError("Faulty work package, 'scripts' cannot be empty")
 
-    
     active_dom, tree = parse_and_wrap_dom(filepath)
     context_doms, context_doms_excluded_message = get_context_doms(filepath)
 
@@ -146,7 +144,7 @@ def get_context_doms(filepath: Path):
     print(f"Directory of context doms {directory}")
     # 2. Find files with the same extension, excluding the original file, call wrapper
     context_doms_excluded_message = ""
-    other_files=[]
+    other_files = []
     for f in directory.glob(f"*{extension}"):
         if f == filepath:
             continue
@@ -154,9 +152,12 @@ def get_context_doms(filepath: Path):
             other_files.append(parse_and_wrap_dom(f)[0])
         except NameError:
             context_doms_excluded_message += "\n  - " + f.stem + f.suffix
-        
+
     if context_doms_excluded_message:
-        context_doms_excluded_message = "Warning\nThe following files where excluded as context doms for not adhering to E-Laute naming conventions:" + context_doms_excluded_message
+        context_doms_excluded_message = (
+            "Warning\nThe following files where excluded as context doms for not adhering to E-Laute naming conventions:"
+            + context_doms_excluded_message
+        )
     return other_files, context_doms_excluded_message
 
 
@@ -193,9 +194,7 @@ def determine_notationtype(filename: str):
         r".+_enc_((dipl|ed)_(GLT|FLT|ILT|CMN))", filename
     )
     if notationtype_re is None:
-        raise NameError(
-            f"{filename} doesn't fit E_LAUTE naming conventions"
-        )
+        raise NameError(f"{filename} doesn't fit E_LAUTE naming conventions")
     return notationtype_re.group(1)
 
 
@@ -337,8 +336,8 @@ if __name__ == "__main__":
     parser = initialize_parser()
     args = parser.parse_args()
     main(
-            workpackage_id=args.workpackage_id,
-            workpackage_json=args.workpackage_json,
-            filepath=args.filepath,
-            parameters=args.parameters,
+        workpackage_id=args.workpackage_id,
+        workpackage_json=args.workpackage_json,
+        filepath=args.filepath,
+        parameters=args.parameters,
     )

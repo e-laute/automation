@@ -1,5 +1,4 @@
 import re
-import sys
 import argparse
 from pathlib import Path
 import coordinator
@@ -64,7 +63,9 @@ def initialize_parser():
         description="Coordinates the execution of scripts in the workpackage on filepath"
     )
 
-    parser.add_argument("-e", "--exclude", help="Files to be excluded", nargs="*")
+    parser.add_argument(
+        "-e", "--exclude", help="Files to be excluded", nargs="*"
+    )
     parser.add_argument(
         "-ft",
         "--filetype",
@@ -118,15 +119,19 @@ if __name__ == "__main__":
                 continue
             print(f"Wrapper calls coordinator.main with{root / filepath}")
             try:
-                summary_message_current, error_message_current = coordinator.main(
-                    workpackage_id=args.workpackage_id,
-                    filepath=str((root / filepath)),
-                    addargs=args.addargs,
+                summary_message_current, error_message_current = (
+                    coordinator.main(
+                        workpackage_id=args.workpackage_id,
+                        filepath=str((root / filepath)),
+                        addargs=args.addargs,
+                    )
                 )
                 summary_message += summary_message_current
                 error_message += error_message_current
             except Exception as e:
-                print(f"\n{filepath} wasn't processed due to coordinator raising {e}\n")
+                print(
+                    f"\n{filepath} wasn't processed due to coordinator raising {e}\n"
+                )
 
     write_to_github_summary(
         SUMMARY_HEADER_TABLE + summary_message + "\n\nErrors:\n" + error_message
