@@ -1,12 +1,8 @@
 import copy
-import math
-import os
 import re
-import sys
-from pathlib import Path
 
 from lxml import etree
-from utils import *
+from utils import dur_length, get_depth
 
 ns = {
     "mei": "http://www.music-encoding.org/ns/mei",
@@ -16,7 +12,9 @@ ns = {
 XML_ID = "{http://www.w3.org/XML/1998/namespace}id"
 
 
-def add_sbs_every_n(active_dom: dict, context_doms: list, sbInterval: int, **addargs):
+def add_sbs_every_n(
+    active_dom: dict, context_doms: list, sbInterval: int, **addargs
+):
     """
     Adds `<sb>` every n measures
 
@@ -140,7 +138,7 @@ def _template_function(active_dom: dict, context_doms: list, **addargs):
 
     root = active_dom["dom"]
 
-    xpath_result = root.xpath(".//mei:elem[@attrib='value']", namespaces=ns)
+    # xpath_result = root.xpath(".//mei:elem[@attrib='value']", namespaces=ns)
 
     active_dom["dom"] = root
     summary_message = ""
@@ -178,17 +176,23 @@ def compare_mnums(active_dom: dict, context_doms: list, **addargs):
                 ed_CMN = getmnum(dom["dom"])
 
     id_match = re.match(
-        r".+(n\d+)_([0-9rv-]+)_enc_((ed|dipl)_(CMN|GLT))", active_dom["filename"]
+        r".+(n\d+)_([0-9rv-]+)_enc_((ed|dipl)_(CMN|GLT))",
+        active_dom["filename"],
     )
     if id_match:
         id_name = id_match.group(1)
     else:
         id_name = active_dom["filename"]
     mnums_align = (
-        dipl_GLT[0] == dipl_CMN[0] == ed_GLT[0] == ed_CMN[0]  # last @n must be the same
-        and dipl_GLT[1] == dipl_CMN[1]  # dipland ed should have same number of measures
+        dipl_GLT[0]
+        == dipl_CMN[0]
+        == ed_GLT[0]
+        == ed_CMN[0]  # last @n must be the same
+        and dipl_GLT[1]
+        == dipl_CMN[1]  # dipland ed should have same number of measures
         and ed_GLT[1] == ed_CMN[1]
-        and ed_GLT[2] == ed_CMN[2]  # ed should have same number of corrected measure
+        and ed_GLT[2]
+        == ed_CMN[2]  # ed should have same number of corrected measure
     )
     correct = "✅ " if mnums_align else "❌ "
     output_list = [correct, id_name, dipl_GLT, dipl_CMN, ed_GLT, ed_CMN]
@@ -234,7 +238,11 @@ def getmnum(root: etree.Element):
 
 
 def add_header_from_context(
-    active_dom: dict, context_doms: list, projectstaff: str, getElemFrom: str, **addargs
+    active_dom: dict,
+    context_doms: list,
+    projectstaff: str,
+    getElemFrom: str,
+    **addargs,
 ):
     """
     Adds header from dipl_GLT to ed_GLT, dipl_CMN or ed_CMN
@@ -267,7 +275,9 @@ def add_header_from_context(
         ".//mei:corpName//mei:expan[text()='Electronic Linked Annotated Unified Tablature Edition']",
         namespaces=ns,
     ):
-        raise RuntimeError(f"{active_dom["filename"]} already has E-Laute header")
+        raise RuntimeError(
+            f"{active_dom["filename"]} already has E-Laute header"
+        )
 
     if not helproot.xpath(
         ".//mei:corpName//mei:expan[text()='Electronic Linked Annotated Unified Tablature Edition']",
@@ -282,15 +292,27 @@ def add_header_from_context(
     )
 
     abbr = help_header.find(".//mei:titlePart/mei:abbr", namespaces=ns)
-    if "ed" in active_dom["notationtype"] and "dipl" in help_dom["notationtype"]:
+    if (
+        "ed" in active_dom["notationtype"]
+        and "dipl" in help_dom["notationtype"]
+    ):
         abbr.getparent().text = "edition in "
-    elif "CMN" in active_dom["notationtype"] and "GLT" in help_dom["notationtype"]:
+    elif (
+        "CMN" in active_dom["notationtype"]
+        and "GLT" in help_dom["notationtype"]
+    ):
         abbr.clear()
         abbr.set("expan", "Common Music Notation")
         abbr.text = "CMN"
-    elif "dipl" in active_dom["notationtype"] and "ed" in help_dom["notationtype"]:
+    elif (
+        "dipl" in active_dom["notationtype"]
+        and "ed" in help_dom["notationtype"]
+    ):
         abbr.getparent().text = "transcription in "
-    elif "GLT" in active_dom["notationtype"] and "CMN" in help_dom["notationtype"]:
+    elif (
+        "GLT" in active_dom["notationtype"]
+        and "CMN" in help_dom["notationtype"]
+    ):
         abbr.clear()
         abbr.set("expan", "German Lute Tablature")
         abbr.text = "GLT"
@@ -306,7 +328,9 @@ def add_header_from_context(
 
     revisionDesc = help_header.find("./mei:revisionDesc", namespaces=ns)
     del revisionDesc[1:]
-    revisionDesc[0].attrib.update({"isodate": "YYYY-MM-DD", "n": "1", "resp": "#"})
+    revisionDesc[0].attrib.update(
+        {"isodate": "YYYY-MM-DD", "n": "1", "resp": "#"}
+    )
     revisionDesc_ps = revisionDesc.xpath(".//mei:p", namespaces=ns)
 
     for revp in revisionDesc_ps:
@@ -338,7 +362,9 @@ def add_foldir(measure: etree.Element, fol: str, tstamp: str):
         "dir",
         {"staff": "1", "tstamp": tstamp, "place": "above", "type": "ref"},
     )
-    rend = etree.SubElement(dir, "rend", {"fontstyle": "normal", "fontsize": "x-small"})
+    rend = etree.SubElement(
+        dir, "rend", {"fontstyle": "normal", "fontsize": "x-small"}
+    )
     rend.text = f"fol. {fol}"
 
 
@@ -402,7 +428,9 @@ def add_section_foldir_from_context_to_ed(
         )
 
     if "ed" in active_dom["notationtype"]:
-        section_in_section = root.xpath(".//mei:section//mei:section", namespaces=ns)
+        section_in_section = root.xpath(
+            ".//mei:section//mei:section", namespaces=ns
+        )
 
         expansion = root.find(".//mei:expansion", namespaces=ns)
         if expansion is not None:
@@ -417,7 +445,9 @@ def add_section_foldir_from_context_to_ed(
     sections = root.xpath(".//mei:section", namespaces=ns)
 
     if len(sections) != 1:
-        raise RuntimeError(f"{active_dom["filename"]} number of section is not 1")
+        raise RuntimeError(
+            f"{active_dom["filename"]} number of section is not 1"
+        )
     else:
         section = sections[0]
 
@@ -453,7 +483,9 @@ def add_section_foldir_from_context_to_ed(
 
     section_children = list(section)
     current_n = ""
-    current_section = -1  # current section statrs before 0 to account for first section
+    current_section = (
+        -1
+    )  # current section statrs before 0 to account for first section
     print(section_info)
     for child in section_children:
         if child.tag == f"{{{ns['mei']}}}measure":
@@ -461,7 +493,9 @@ def add_section_foldir_from_context_to_ed(
             if (
                 current_section != len(section_info) - 1
                 and current_n
-                == section_info[current_section + 1][0]  # compare to next section mnum
+                == section_info[current_section + 1][
+                    0
+                ]  # compare to next section mnum
             ):
                 current_section += 1
                 section_info[current_section][3].append(child)
@@ -494,7 +528,9 @@ def get_section_info_dipl(help_dom: dict):
     """
     Searches for dirs with folio to find mnum of measures after or containing page beginning
     """
-    pb_measures = help_dom["dom"].xpath(".//mei:dir[@type='ref']/..", namespaces=ns)
+    pb_measures = help_dom["dom"].xpath(
+        ".//mei:dir[@type='ref']/..", namespaces=ns
+    )
     print([p.tag for p in pb_measures])
 
     if len(pb_measures) == 0:
@@ -505,7 +541,7 @@ def get_section_info_dipl(help_dom: dict):
     for pb_measure in pb_measures:
         if pb_measure.tag != f"{{{ns['mei']}}}measure":
             raise RuntimeError(
-                f"foldir parent wasn't measure in {help_dom["filename"]} at {pb_measure.get("n","no_n_found")}"
+                f"foldir parent wasn't measure in {help_dom["filename"]} at {pb_measure.get("n", "no_n_found")}"
             )
         if pb_measure.xpath(
             "ancestor::mei:orig", namespaces=ns
@@ -515,14 +551,14 @@ def get_section_info_dipl(help_dom: dict):
             pbs = pb_measure.getparent().xpath("./mei:pb", namespaces=ns)
             if len(pbs) != 1:
                 raise RuntimeError(
-                    f"More than one pb in reg around {pb_measure.get("n","no_n_found")}"
+                    f"More than one pb in reg around {pb_measure.get("n", "no_n_found")}"
                 )
             pb = pbs[0]
         else:
             pb = get_previous_at_same_depth(help_dom["dom"], pb_measure)
             if pb is None or pb.tag != f"{{{ns['mei']}}}pb":
                 raise RuntimeError(
-                    f"No pb found before {pb_measure.get("n","no_n_found")}"
+                    f"No pb found before {pb_measure.get("n", "no_n_found")}"
                 )
         foldir = pb_measure.find("./mei:dir[@type='ref']", namespaces=ns)
         tstamp = foldir.get("tstamp")
@@ -541,7 +577,9 @@ def get_section_info_ed(help_dom: dict):
         if not foldir:
             raise RuntimeError(f"no foldir found in {help_dom["filename"]}")
         tstamp = foldir[0].get("tstamp")
-        section_info.append((help_measures[0].get("n"), help_section.get("n"), tstamp))
+        section_info.append(
+            (help_measures[0].get("n"), help_section.get("n"), tstamp)
+        )
 
     return section_info
 
@@ -631,7 +669,7 @@ def add_finis_to_last_measure(
             tstamp *= 2
         else:
             raise RuntimeError(
-                f"Measure {measure.get("n","n_not_found")} has problematic tstamp calculation"
+                f"Measure {measure.get("n", "n_not_found")} has problematic tstamp calculation"
             )
 
     print(tstamp)
@@ -644,7 +682,9 @@ def add_finis_to_last_measure(
         {
             "staff": "2" if "ed_CMN" in active_dom["notationtype"] else "1",
             "tstamp": str(tstamp + 1),
-            "place": "above" if "ed_CMN" in active_dom["notationtype"] else "within",
+            "place": (
+                "above" if "ed_CMN" in active_dom["notationtype"] else "within"
+            ),
             "type": "finis",
             "ho": vu + "vu",
         },

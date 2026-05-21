@@ -1,4 +1,4 @@
-from lxml import etree
+# from lxml import etree
 
 ns = {
     "mei": "http://www.music-encoding.org/ns/mei",
@@ -21,13 +21,12 @@ def runtime_error(active_dom: dict, context_doms: list, **addargs):
 
     root = active_dom["dom"]
 
-    xpath_result = root.xpath(".//mei:elem[@attrib='value']", namespaces=ns)
-
     raise RuntimeError("This is a user error! It should be rendered")
 
     active_dom["dom"] = root
     output_message = ""
     return active_dom, output_message
+
 
 def too_little_output(active_dom: dict, context_doms: list, **addargs):
     """
@@ -42,11 +41,9 @@ def too_little_output(active_dom: dict, context_doms: list, **addargs):
 
     root = active_dom["dom"]
 
-    xpath_result = root.xpath(".//mei:elem[@attrib='value']", namespaces=ns)
-
     active_dom["dom"] = root
     output_message = ""
-    summary_message = ""
+    # summary_message = ""
     return active_dom, output_message
 
 
@@ -62,8 +59,6 @@ def _template_function(active_dom: dict, context_doms: list, **addargs):
     """
 
     root = active_dom["dom"]
-
-    xpath_result = root.xpath(".//mei:elem[@attrib='value']", namespaces=ns)
 
     active_dom["dom"] = root
     output_message = ""
