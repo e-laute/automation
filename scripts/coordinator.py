@@ -153,7 +153,7 @@ def get_context_doms(filepath: Path):
         try:
             other_files.append(parse_and_wrap_dom(f)[0])
         except NameError:
-            context_doms_excluded_message += "\n\t- " + f.stem
+            context_doms_excluded_message += "\n  - " + f.stem + f.suffix
         
     if context_doms_excluded_message:
         context_doms_excluded_message = "Warning\nThe following files where excluded as context doms for not adhering to E-Laute naming conventions:" + context_doms_excluded_message
