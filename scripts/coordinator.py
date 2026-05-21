@@ -239,7 +239,6 @@ def main(
         mei_path, workpackage, dic_add_args
     )
     print("::notice::Process completed successfully")
-    return 0
     return summary_message, error_message
 
 
@@ -337,11 +336,9 @@ def initialize_parser():
 if __name__ == "__main__":
     parser = initialize_parser()
     args = parser.parse_args()
-    sys.exit(
-        main(
+    main(
             workpackage_id=args.workpackage_id,
             workpackage_json=args.workpackage_json,
             filepath=args.filepath,
             parameters=args.parameters,
-        )
     )
