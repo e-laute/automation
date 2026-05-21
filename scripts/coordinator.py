@@ -49,8 +49,9 @@ def execute_workpackage(filepath: Path, workpackage: dict, params: dict):
     if not scripts_list:
         raise ValueError("Faulty work package, 'scripts' cannot be empty")
 
+    
     active_dom, tree = parse_and_wrap_dom(filepath)
-    context_doms = get_context_doms(filepath)
+    context_doms, context_doms_excluded_message = get_context_doms(filepath)
 
     # scripts in the JSON is a list of module-to-function paths (dir.subdir.module.func)
     # modules_dic contains the path of the module as key (dir.subdir.module) and the loaded module as item
@@ -109,6 +110,7 @@ def execute_workpackage(filepath: Path, workpackage: dict, params: dict):
                 f"Work package {workpackage['label']} failed. \nSee output of individual scripts or refer to the GitHub link above for further information.\n\n"
                 + output_message_total
                 + f"Script {func_name} failed, says:\n{e}\n\nNo further scripts executed and no files changed"
+                + context_doms_excluded_message
             )
             write_to_console(output_message_total)
             error_message = f"Script {func_name} failed on {filepath}, says:\n{e}\n\nNo further scripts executed and no files changed"
@@ -123,6 +125,7 @@ def execute_workpackage(filepath: Path, workpackage: dict, params: dict):
     output_message_total = (
         f"Work package {workpackage['label']} was successful. \nSee output of individual scripts or refer to the GitHub link above for further information.\n\n"
         + output_message_total
+        + context_doms_excluded_message
     )
     write_to_console(output_message_total)
     return summary_message, error_message
@@ -142,13 +145,19 @@ def get_context_doms(filepath: Path):
     extension = ".mei"
     print(f"Directory of context doms {directory}")
     # 2. Find files with the same extension, excluding the original file, call wrapper
-    other_files = [
-        parse_and_wrap_dom(f)[0]
-        for f in directory.glob(f"*{extension}")
-        if f != filepath
-    ]
-
-    return other_files
+    context_doms_excluded_message = ""
+    other_files=[]
+    for f in directory.glob(f"*{extension}"):
+        if f == filepath:
+            continue
+        try:
+            other_files.append(parse_and_wrap_dom(f)[0])
+        except NameError:
+            context_doms_excluded_message += "\n" + filepath.stem
+        
+    if context_doms_excluded_message:
+        context_doms_excluded_message = "Warning\nThe following files where excluded as context doms for not adhering to E-Laute naming conventions:\n" + context_doms_excluded_message
+    return other_files, context_doms_excluded_message
 
 
 def parse_and_wrap_dom(filepath: Path):
@@ -162,7 +171,7 @@ def parse_and_wrap_dom(filepath: Path):
     tree = etree.parse(filepath, etree.XMLParser(recover=True))
     root = tree.getroot()
     filename = filepath.stem
-    notationtype = determine_notationtype(filepath)
+    notationtype = determine_notationtype(filename)
     return {
         "filename": filename,
         "dom": root,
@@ -170,8 +179,8 @@ def parse_and_wrap_dom(filepath: Path):
     }, tree
 
 
-def determine_notationtype(filepath: Path):
-    print(filepath)
+def determine_notationtype(filename: str):
+    print(filename)
     """
     Determines notationtype of mei.
     E-LAUTE specific implementaion: from filename (dipl|ed)_(GLT|FLT|ILT|CMN)
@@ -181,11 +190,11 @@ def determine_notationtype(filepath: Path):
     """
     # gets end of filename containing notationtype information
     notationtype_re = re.match(
-        r".+_enc_((dipl|ed)_(GLT|FLT|ILT|CMN))", filepath.stem
+        r".+_enc_((dipl|ed)_(GLT|FLT|ILT|CMN))", filename
     )
     if notationtype_re is None:
         raise NameError(
-            f"{filepath.stem} doesn't fit E_LAUTE naming conventions"
+            f"{filename} doesn't fit E_LAUTE naming conventions"
         )
     return notationtype_re.group(1)
 
