@@ -3,7 +3,7 @@ set -euo pipefail
 
 # Install Python dependencies from the central repo
 python -m pip install --upgrade pip
-pip install -r "$GITHUB_WORKSPACE/central-repo/scripts/requirements.txt"
+pip install -r "$GITHUB_WORKSPACE/central-repo/scripts/requirements-dispatch.txt"
 
 # Run the coordinator script from the central repo on the caller repo's data.
 # Pass -p only when parameters is non-empty.
