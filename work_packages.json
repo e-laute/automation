@@ -109,6 +109,24 @@
       "commitResult": true
     },
     {
+      "id": "too_little_returns",
+      "label": "create_value_error",
+      "description": "Calls too_little_output to test error handling",
+      "userFacing": true,
+      "params": {},
+      "scripts": ["testing_scripts.too_little_output"],
+      "commitResult": true
+    },
+    {
+      "id": "add_sbs_empty_parameters",
+      "label": "create type error via add sbs",
+      "description": "calls add_sbs without input, should raise KeyError",
+      "userFacing": true,
+      "params": {},
+      "scripts": ["script_collection.add_sbs_every_n"],
+      "commitResult": true
+    },
+    {
       "id": "remove_and_add_sbs",
       "label": "Remove all system breaks and add again",
       "description": "Removes all <sb/>s and adds <sb/> every n measures",
