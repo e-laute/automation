@@ -29,6 +29,26 @@ def runtime_error(active_dom: dict, context_doms: list, **addargs):
     output_message = ""
     return active_dom, output_message
 
+def too_little_output(active_dom: dict, context_doms: list, **addargs):
+    """
+    template function
+
+    :param active_dom: dict containing {filename:Path/str?, notationtype:str, dom:etree.Element}
+    :type active_dom: dict
+    :param context_doms: list containing dom dicts
+    :type context_doms: list
+    :param addargs: Addional arguments that are unused
+    """
+
+    root = active_dom["dom"]
+
+    xpath_result = root.xpath(".//mei:elem[@attrib='value']", namespaces=ns)
+
+    active_dom["dom"] = root
+    output_message = ""
+    summary_message = ""
+    return active_dom, output_message
+
 
 def _template_function(active_dom: dict, context_doms: list, **addargs):
     """
@@ -47,4 +67,5 @@ def _template_function(active_dom: dict, context_doms: list, **addargs):
 
     active_dom["dom"] = root
     output_message = ""
-    return active_dom, output_message
+    summary_message = ""
+    return active_dom, output_message, summary_message
