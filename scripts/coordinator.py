@@ -171,6 +171,7 @@ def parse_and_wrap_dom(filepath: Path):
 
 
 def determine_notationtype(filepath: Path):
+    print(filepath)
     """
     Determines notationtype of mei.
     E-LAUTE specific implementaion: from filename (dipl|ed)_(GLT|FLT|ILT|CMN)
