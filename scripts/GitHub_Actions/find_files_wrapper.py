@@ -21,7 +21,7 @@ EXCLUDE_ERROR_MESSAGE = "Must all be numbers greater than 0"
 
 
 def format_filetypes(filetype: str):
-    """E-Laute specific implementation"""
+    """E-LAUTE specific implementation"""
 
     if filetype is None:
         return ["dipl_CMN", "ed_CMN", "dipl_GLT", "ed_GLT"]

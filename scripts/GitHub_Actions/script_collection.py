@@ -276,7 +276,7 @@ def add_header_from_context(
         namespaces=ns,
     ):
         raise RuntimeError(
-            f"{active_dom["filename"]} already has E-Laute header"
+            f"{active_dom["filename"]} already has E-LAUTE header"
         )
 
     if not helproot.xpath(
