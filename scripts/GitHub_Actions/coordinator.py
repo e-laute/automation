@@ -155,7 +155,7 @@ def get_context_doms(filepath: Path):
 
     if context_doms_excluded_message:
         context_doms_excluded_message = (
-            "Warning\nThe following files where excluded as context doms for not adhering to E-Laute naming conventions:"
+            "Warning\nThe following files were excluded as context DOMs for not adhering to E-LAUTE naming conventions:"
             + context_doms_excluded_message
         )
     return other_files, context_doms_excluded_message
