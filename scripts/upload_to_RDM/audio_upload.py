@@ -63,7 +63,7 @@ TESTING_WORK_ID = (
     "A-Wn_Mus.Hs._41950_n01, A-Wn_Mus.Hs._41950_n02, A-Wn_Mus.Hs._41950_n03"
 )
 SELECTED_WORK_IDS = []
-COMPARE_IDS_ONLY = False
+COMPARE_IDS_ONLY = False  # if true, compares if new Ids already exist in RDM
 SKIP_WORK_IDS = []
 ONLY_NEW_UPLOADS = True
 PROCESS_DELAY_SECONDS = 5
