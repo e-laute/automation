@@ -5,6 +5,7 @@ scripts/upload_to_RDM/drive_files/
 scripts/json_metadata_files/
 scripts/upload_to_RDM/tables/db_schoen23_2026-02-16_11-50-47.sql
 scripts/upload_to_RDM/tables/db_schoen23_2026-02-20_13-03-20.sql
+scripts/upload_to_RDM/test_files/
 
 .DS_Store
 
