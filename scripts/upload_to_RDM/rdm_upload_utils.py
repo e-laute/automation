@@ -100,6 +100,23 @@ def get_id_from_api(url):
         return None
 
 
+def _load_dotenv(env_path):
+    """Load key=value pairs from a .env file into os.environ without overriding existing vars."""
+    try:
+        with open(env_path, encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if not line or line.startswith("#") or "=" not in line:
+                    continue
+                key, _, value = line.partition("=")
+                key = key.strip()
+                value = value.strip().strip('"').strip("'")
+                if key and key not in os.environ:
+                    os.environ[key] = value
+    except FileNotFoundError:
+        pass
+
+
 def setup_for_rdm_api_access(TESTING_MODE=True):
 
     # TODO: remove need for mapping file and url list
@@ -110,20 +127,26 @@ def setup_for_rdm_api_access(TESTING_MODE=True):
     # - name: Test env vars for python
     #     run: TEST_SECRET=${{ secrets.MY_TOKEN }} python -c 'import os;print(os.environ['TEST_SECRET'])
 
+    _load_dotenv(Path(__file__).parent / ".env")
+
     if TESTING_MODE:
         RDM_API_URL = "https://test.researchdata.tuwien.ac.at/api"
         ELAUTE_COMMUNITY_ID = get_id_from_api(
             f"{RDM_API_URL}/communities/e-laute-test"
         )
         print("🧪 Running in GitHubActions TESTING mode")
-        RDM_API_TOKEN = os.environ["RDM_TEST_API_TOKEN_JJ"]
+        RDM_API_TOKEN = os.environ.get("RDM_TEST_API_TOKEN_JJ") or os.environ.get("RDM_TEST_API_TOKEN")
+        if not RDM_API_TOKEN:
+            raise KeyError("RDM_TEST_API_TOKEN_JJ")
     else:
         RDM_API_URL = "https://researchdata.tuwien.ac.at/api"
         ELAUTE_COMMUNITY_ID = get_id_from_api(
             f"{RDM_API_URL}/communities/e-laute"
         )
         print(" 🚀 Running in GitHubActions PRODUCTION mode")
-        RDM_API_TOKEN = os.environ["RDM_API_TOKEN_JJ"]
+        RDM_API_TOKEN = os.environ.get("RDM_API_TOKEN_JJ") or os.environ.get("RDM_API_TOKEN")
+        if not RDM_API_TOKEN:
+            raise KeyError("RDM_API_TOKEN_JJ")
 
     # Use the repo root when called from GitHub Actions; fallback to home.
     FILES_PATH = os.environ.get("GITHUB_WORKSPACE", os.path.expanduser("~"))

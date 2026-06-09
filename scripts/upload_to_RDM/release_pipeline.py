@@ -4,6 +4,14 @@ Release orchestration script for the upload of MEI files to the TU-RDM platform 
 TODO: add provenance generation
     - auch ins RDM speichern? als Teil vom Source-Datensatz
 
+
+cd /Users/jaklin/Desktop/LetsEncode/e-laute/automation/scripts
+
+python -m upload_to_RDM.release_pipeline \
+  --caller-repo-path upload_to_RDM/test_files \
+  --upload-mode testing
+
+
 """
 
 from __future__ import annotations
@@ -22,7 +30,6 @@ from typing import Iterable
 
 import generate_provenance
 import validate_encodings
-
 
 # TODO: how to proceed with original ILT or FLT files?
 # For now, only CMN and GLT allowed because some repos contain old ILT/FLT files.
@@ -205,7 +212,7 @@ def run_derive_on_id_folders(
 ) -> bool:
     print("Derive notation files...")
     derive_script = repo_root.joinpath(
-        "scripts", "derive-alternate-tablature-notation-types.py"
+        "derive-alternate-tablature-notation-types.py"
     )
     if not derive_script.exists():
         print("Derive step failed: derive script not found.")

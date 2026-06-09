@@ -1,16 +1,22 @@
 """
 Upload-script for the E-LAUTE MEI files to the TU-RDM platform.
+Primary usage is via a release of a repository on GitHub, which triggers the workflow that runs this script in production mode.
+
 
 Usage (testing mode):
-cd scripts
-python -m upload_to_RDM.upload_meis --testing
+cd scripts/upload_to_RDM
+python -m upload_meis --testing
 
 Usage (production mode):
-cd scripts
-python -m upload_to_RDM.upload_meis --production
+cd scripts/upload_to_RDM
+python -m upload_meis --production
 
 # TODO: make sure that also the derived files are there and ready to be uploaded to RDM
 
+
+cd /Users/jaklin/Desktop/LetsEncode/e-laute/automation/scripts
+GITHUB_WORKSPACE=upload_to_RDM/test_files/A-Wn_Mus.Hs._18688_n07_8r \
+python -m upload_to_RDM.upload_meis --testing
 
 
 """
@@ -85,8 +91,8 @@ def _load_id_table_title_map(id_csv_path):
         return {}
 
     table = raw_df[[work_col, title_col]].copy()
-    table[work_col] = table[work_col].astype("string").str.strip()
-    table[title_col] = table[title_col].astype("string").str.strip()
+    table.loc[:, work_col] = table[work_col].astype("string").str.strip()
+    table.loc[:, title_col] = table[title_col].astype("string").str.strip()
     table = table.dropna(subset=[work_col, title_col])
     table = table[table[title_col] != ""]
 
@@ -634,9 +640,12 @@ def fill_out_basic_metadata_for_work(
     # First pass: Add authors as creators
     for _, person in people_df.iterrows():
         if person.get("role") == "author":
+            family_name = _as_text(person.get("last_name")) or _as_text(person.get("full_name"))
+            if not family_name:
+                continue
             person_entry = {
                 "person_or_org": {
-                    "family_name": person.get("last_name", ""),
+                    "family_name": family_name,
                     "given_name": person.get("first_name", ""),
                     "name": person.get("full_name", ""),
                     "type": "personal",
@@ -652,9 +661,12 @@ def fill_out_basic_metadata_for_work(
             person.get("role") == "intabulator"
             and person.get("full_name", "") not in creator_names
         ):
+            family_name = _as_text(person.get("last_name")) or _as_text(person.get("full_name"))
+            if not family_name:
+                continue
             person_entry = {
                 "person_or_org": {
-                    "family_name": person.get("last_name", ""),
+                    "family_name": family_name,
                     "given_name": person.get("first_name", ""),
                     "name": person.get("full_name", ""),
                     "type": "personal",
@@ -673,9 +685,12 @@ def fill_out_basic_metadata_for_work(
             person.get("role") in ["meiEditor", "fronimoEditor"]
             and person.get("full_name", "") not in creator_names
         ):
+            family_name = _as_text(person.get("last_name")) or _as_text(person.get("full_name"))
+            if not family_name:
+                continue
             person_entry = {
                 "person_or_org": {
-                    "family_name": person.get("last_name", ""),
+                    "family_name": family_name,
                     "given_name": person.get("first_name", ""),
                     "name": person.get("full_name", ""),
                     "type": "personal",
@@ -699,9 +714,12 @@ def fill_out_basic_metadata_for_work(
             )
 
             if person_role_key not in contributor_names:
+                family_name = _as_text(person.get("last_name")) or _as_text(person.get("full_name"))
+                if not family_name:
+                    continue
                 person_entry = {
                     "person_or_org": {
-                        "family_name": person.get("last_name", ""),
+                        "family_name": family_name,
                         "given_name": person.get("first_name", ""),
                         "name": person.get("full_name", ""),
                         "type": "personal",
@@ -924,8 +942,8 @@ def update_records_in_RDM(work_ids_to_update):
                 new_version_data = r.json()
                 new_record_id = new_version_data["id"]
 
-                prepared_file_paths, temp_bundle_dir = prepare_upload_file_paths(
-                    work_id, upload_file_paths
+                prepared_file_paths, temp_bundle_dir = (
+                    prepare_upload_file_paths(work_id, upload_file_paths)
                 )
                 try:
                     fails = upload_to_rdm(
