@@ -4,10 +4,12 @@ Upload-script for the E-LAUTE audio files to the TU-RDM platform.
 Before running make sure that the IDs in the id_table (Sheets) are well formed
 and the audio files in the Drive folder are named so that the full elauteId is present.
 
+Install ffmpeg to enable MP3 conversion (eg. via homebrew: brew install ffmpeg)
+
 Usage:
 . .venv/bin/activate
-cd scripts
-python -m upload_to_RDM.audio_upload
+cd scripts/upload_to_RDM
+python -m audio_upload
 
 Make sure to set the TESTING_MODE flag to false when ready to upload to the real RDM.
 
@@ -41,7 +43,7 @@ import taglib
 from dotenv import load_dotenv
 from wavinfo import WavInfoReader
 
-from upload_to_RDM.rdm_upload_utils import (
+from rdm_upload_utils import (
     create_related_identifiers,
     get_id_from_api,
     get_records_from_RDM,
@@ -56,8 +58,10 @@ pd.set_option("display.max_columns", None)
 
 ROOT_DIR = Path(__file__).resolve().parent
 
-TESTING_MODE = False
-TESTING_WORK_ID = ""
+TESTING_MODE = True
+TESTING_WORK_ID = (
+    "A-Wn_Mus.Hs._41950_n01, A-Wn_Mus.Hs._41950_n02, A-Wn_Mus.Hs._41950_n03"
+)
 SELECTED_WORK_IDS = []
 COMPARE_IDS_ONLY = False
 SKIP_WORK_IDS = []
@@ -334,11 +338,10 @@ def load_form_responses(audio_files_folder_path):
 
 def clean_work_ids(form_responses_df):
     split_ids = form_responses_df["work_id_forms"].str.split()
-    form_responses_df["work_id"] = split_ids.str[-1]
-    form_responses_df["work_id_2"] = split_ids.str[-2]
-    form_responses_df["work_id_3"] = split_ids.str[-3]
-    form_responses_df["work_id_2"] = form_responses_df["work_id_2"].fillna("")
-    form_responses_df["work_id_3"] = form_responses_df["work_id_3"].fillna("")
+    form_responses_df = form_responses_df.copy()
+    form_responses_df.loc[:, "work_id"] = split_ids.str[-1]
+    form_responses_df.loc[:, "work_id_2"] = split_ids.str[-2].fillna("")
+    form_responses_df.loc[:, "work_id_3"] = split_ids.str[-3].fillna("")
 
     grouped_ids = {
         "A-Wn_Mus.Hs._18688_n16": 2,
@@ -362,13 +365,11 @@ def clean_work_ids(form_responses_df):
             else leading_id + ", " + form_responses_df["work_id"]
         )
 
-    form_responses_df["work_id"] = form_responses_df["work_id"].apply(
+    form_responses_df.loc[:, "work_id"] = form_responses_df["work_id"].apply(
         _normalize_work_id_field
     )
 
-    form_responses_df.drop(columns=["work_id_2", "work_id_3"], inplace=True)
-
-    return form_responses_df
+    return form_responses_df.drop(columns=["work_id_2", "work_id_3"])
 
 
 def load_id_table():
@@ -395,18 +396,22 @@ def load_id_table():
                 "ID table is missing required columns: " + ", ".join(missing)
             )
 
-        id_table = pd.DataFrame()
-        id_table["work_id"] = (
-            raw_df[work_col].astype("string").str.strip().replace("", pd.NA)
-        )
-        id_table["work_id"] = id_table["work_id"].apply(
-            _normalize_work_id_alias
-        )
-        id_table["title"] = (
-            raw_df[title_col].astype("string").str.strip().replace("", pd.NA)
-        )
-        id_table["fol_or_p"] = (
-            raw_df[fol_col].astype("string").str.strip().replace("", pd.NA)
+        id_table = pd.DataFrame(
+            {
+                "work_id": raw_df[work_col]
+                .astype("string")
+                .str.strip()
+                .replace("", pd.NA)
+                .apply(_normalize_work_id_alias),
+                "title": raw_df[title_col]
+                .astype("string")
+                .str.strip()
+                .replace("", pd.NA),
+                "fol_or_p": raw_df[fol_col]
+                .astype("string")
+                .str.strip()
+                .replace("", pd.NA),
+            }
         )
 
         id_table = id_table.dropna(subset=["work_id"])
@@ -476,29 +481,6 @@ def build_metadata_df(form_responses_df, id_table):
             return pd.Series(parts)
         return pd.Series([text, ""])
 
-    metadata_df["timestamp"] = pd.to_datetime(
-        metadata_df["timestamp"], format="%d/%m/%Y %H:%M:%S", errors="coerce"
-    )
-    metadata_df["making_date"] = pd.to_numeric(
-        metadata_df["making_date"], errors="coerce"
-    ).astype("Int64")
-
-    metadata_df[["performer_lastname", "performer_firstname"]] = metadata_df[
-        "performer"
-    ].apply(split_name)
-
-    metadata_df["licence"] = "CC BY-SA 4.0"
-
-    metadata_df[["producer_lastname", "producer_firstname"]] = metadata_df[
-        "producer"
-    ].apply(split_name)
-
-    metadata_df["recording_id"] = (
-        metadata_df["work_id"].str.replace(", ", "_")
-        + "_"
-        + metadata_df["uuid"]
-    )
-
     def extract_before_n(work_id):
         if pd.isna(work_id):
             return pd.NA
@@ -511,7 +493,33 @@ def build_metadata_df(form_responses_df, id_table):
         match = re.search(r"(.+?)(?:\s|_n\d+)", first_work_id)
         return match.group(1) if match else first_work_id
 
-    metadata_df["source_id"] = metadata_df["work_id"].apply(extract_before_n)
+    performer_split = metadata_df["performer"].apply(split_name)
+    producer_split = metadata_df["producer"].apply(split_name)
+
+    metadata_df.loc[:, "timestamp"] = pd.to_datetime(
+        metadata_df["timestamp"], format="%d/%m/%Y %H:%M:%S", errors="coerce"
+    )
+    making_date = pd.to_numeric(
+        metadata_df["making_date"], errors="coerce"
+    ).astype("Int64")
+    # Drop first so the column is recreated with Int64 dtype: assigning Int64
+    # into the existing float64 column would warn about an incompatible-dtype
+    # in-place set (deprecated in pandas).
+    metadata_df = metadata_df.drop(columns=["making_date"])
+    metadata_df.loc[:, "making_date"] = making_date
+    metadata_df.loc[:, "performer_lastname"] = performer_split[0]
+    metadata_df.loc[:, "performer_firstname"] = performer_split[1]
+    metadata_df.loc[:, "licence"] = "CC BY-SA 4.0"
+    metadata_df.loc[:, "producer_lastname"] = producer_split[0]
+    metadata_df.loc[:, "producer_firstname"] = producer_split[1]
+    metadata_df.loc[:, "recording_id"] = (
+        metadata_df["work_id"].str.replace(", ", "_")
+        + "_"
+        + metadata_df["uuid"]
+    )
+    metadata_df.loc[:, "source_id"] = metadata_df["work_id"].apply(
+        extract_before_n
+    )
 
     merged_df = metadata_df.merge(
         id_table[["work_id", "title", "fol_or_p"]], on="work_id", how="left"
@@ -1256,15 +1264,15 @@ def get_existing_records_by_work_id():
         print("No records found in RDM.")
         return {}
 
-    records_df = records_df.dropna(subset=["elaute_id"])
+    records_df = records_df.dropna(subset=["elaute_id"]).copy()
     if records_df.empty:
         print("No records with E-LAUTE IDs found in RDM.")
         return {}
 
-    records_df["elaute_id"] = records_df["elaute_id"].apply(
+    records_df.loc[:, "elaute_id"] = records_df["elaute_id"].apply(
         _normalize_work_id_alias
     )
-    records_df["updated_dt"] = pd.to_datetime(
+    records_df.loc[:, "updated_dt"] = pd.to_datetime(
         records_df["updated"], errors="coerce"
     )
     records_df = records_df.sort_values("updated_dt")
@@ -1285,10 +1293,10 @@ def print_rdm_identifier_comparison_and_stop():
         print("No records with identifier scheme 'other' found in RDM.")
         return
 
-    records_df["elaute_id"] = records_df["elaute_id"].apply(
+    records_df.loc[:, "elaute_id"] = records_df["elaute_id"].apply(
         _normalize_work_id_alias
     )
-    records_df["updated_dt"] = pd.to_datetime(
+    records_df.loc[:, "updated_dt"] = pd.to_datetime(
         records_df["updated"], errors="coerce"
     )
     latest_records = (
