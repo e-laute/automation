@@ -3,7 +3,7 @@ set -euo pipefail
 
 # The work packages definition is hardcoded here rather than passed in as an
 # input, since caller_multiple_files.yml no longer takes a workpackage_json argument.
-WORKPACKAGES_ADRESS="central_repo/work_packages.json"
+WORKPACKAGES_ADRESS="central-repo/work_packages.json"
 
 # Install Python dependencies from the central repo
 python -m pip install --upgrade pip
