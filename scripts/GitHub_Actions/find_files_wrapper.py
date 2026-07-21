@@ -119,6 +119,7 @@ if __name__ == "__main__":
          workpackages_list = json.load(f)
     workpackage = None
     for candidate in workpackages_list:
+        print(candidate)
         if not isinstance(candidate,dict):
             continue # to avoid beginning definitions in workpackages file
         if candidate["id"] == args.workpackage_id:
