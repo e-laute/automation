@@ -143,7 +143,7 @@ if __name__ == "__main__":
                     coordinator.main(
                         workpackage_json=workpackage,
                         filepath=str((root / filepath)),
-                        addargs=args.addargs,
+                        parameters=args.addargs,
                     )
                 )
                 summary_message += summary_message_current
