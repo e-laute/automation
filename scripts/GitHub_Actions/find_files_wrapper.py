@@ -124,6 +124,7 @@ if __name__ == "__main__":
             workpackage = json.dumps(candidate)
             break
 
+    print(workpackage)
     root = Path("caller-repo")
     for root, dirs, filepaths in root.walk():
         dirs.sort()
