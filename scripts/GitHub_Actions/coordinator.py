@@ -26,6 +26,7 @@ def execute_workpackage(filepath: Path, workpackage: dict, params: dict):
     :returns: 0 on success, 1 if a script fails
     :rtype: int
     """
+    print(workpackage)
     try:
         raw_scripts = workpackage["scripts"]
     except KeyError as e:
@@ -215,6 +216,8 @@ def main(
     #     if candidate["id"] == workpackage_id:
     #         workpackage = candidate
     #         break
+
+    print(workpackage_json)
     try:
         workpackage = json.loads(workpackage_json)
     except json.JSONDecodeError:
