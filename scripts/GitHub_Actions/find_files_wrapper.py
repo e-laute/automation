@@ -113,10 +113,13 @@ if __name__ == "__main__":
     summary_message = ""
     error_message = ""
 
+    # extract singualr workpackage
     with open(Path(args.workpackage_adress)) as f:
          workpackages_list = json.load(f)
     workpackage = None
     for candidate in workpackages_list:
+        if not isinstance(candidate,dict):
+            continue # to avoid beginning definitions in workpackages file
         if candidate["id"] == args.workpackage_id:
             workpackage = candidate
             break
