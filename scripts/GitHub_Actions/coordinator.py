@@ -217,7 +217,7 @@ def main(
     #         workpackage = candidate
     #         break
 
-    print(workpackage_json)
+    print("Workpackage_json: ",workpackage_json)
     try:
         workpackage = json.loads(workpackage_json)
     except json.JSONDecodeError:
