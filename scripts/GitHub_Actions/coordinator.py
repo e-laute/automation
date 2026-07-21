@@ -199,7 +199,7 @@ def determine_notationtype(filename: str):
 
 
 def main(
-    workpackage_id: str, workpackage_json: str, filepath: str, parameters: str
+    workpackage_json: str, filepath: str, parameters: str
 ):
     """
     Parses Arguments, selects file, calls coordinator on files with workpackage
