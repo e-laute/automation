@@ -1,5 +1,6 @@
 import re
 import argparse
+import json
 from pathlib import Path
 import coordinator
 from utils import write_to_github_summary
@@ -78,6 +79,14 @@ def initialize_parser():
         required=True,
         help="The id of the workpackage to be executed",
     )
+
+    parser.add_argument(
+        "-wa",
+        "--workpackage_adress",
+        required=True,
+        help="The path to the workpackage file",
+    )
+
     parser.add_argument(
         "-a",
         "--addargs",
@@ -104,6 +113,14 @@ if __name__ == "__main__":
     summary_message = ""
     error_message = ""
 
+    with open(Path(args.workpackage_adress)) as f:
+         workpackages_list = json.load(f)
+    workpackage = None
+    for candidate in workpackages_list:
+        if candidate["id"] == args.workpackage_id:
+            workpackage = candidate
+            break
+
     root = Path("caller-repo")
     for root, dirs, filepaths in root.walk():
         dirs.sort()
@@ -121,7 +138,7 @@ if __name__ == "__main__":
             try:
                 summary_message_current, error_message_current = (
                     coordinator.main(
-                        workpackage_id=args.workpackage_id,
+                        workpackage_json=workpackage,
                         filepath=str((root / filepath)),
                         addargs=args.addargs,
                     )
