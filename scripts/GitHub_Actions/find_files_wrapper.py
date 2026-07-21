@@ -116,9 +116,9 @@ if __name__ == "__main__":
 
     # extract singualr workpackage
     with open(Path(args.workpackage_adress)) as f:
-         workpackages_list = json.load(f)
+         workpackages_file = json.load(f)
     workpackage = None
-    for candidate in workpackages_list:
+    for candidate in workpackages_file["work_packages"]:
         print(candidate)
         if not isinstance(candidate,dict):
             continue # to avoid beginning definitions in workpackages file
