@@ -1,6 +1,7 @@
 import re
 import argparse
 import json
+import sys
 from pathlib import Path
 import coordinator
 from utils import write_to_github_summary
@@ -124,7 +125,9 @@ if __name__ == "__main__":
             workpackage = json.dumps(candidate)
             break
 
-    print(workpackage)
+    if workpackage is None:
+        print("unknown workpackage-id")
+        sys.exit(1)
     root = Path("caller-repo")
     for root, dirs, filepaths in root.walk():
         dirs.sort()
