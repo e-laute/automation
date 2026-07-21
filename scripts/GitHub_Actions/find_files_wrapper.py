@@ -121,7 +121,7 @@ if __name__ == "__main__":
         if not isinstance(candidate,dict):
             continue # to avoid beginning definitions in workpackages file
         if candidate["id"] == args.workpackage_id:
-            workpackage = candidate
+            workpackage = json.dumps(candidate)
             break
 
     root = Path("caller-repo")
