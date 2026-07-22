@@ -11,6 +11,27 @@ ns = {
 
 XML_ID = "{http://www.w3.org/XML/1998/namespace}id"
 
+def update_mei_version(
+    active_dom: dict, context_doms: list, version: str="5.1", **addargs
+):
+    """
+    Changes processing instructions and root to MEI-version
+
+    :param active_dom: dict containing {filename:Path/str?, notationtype:str, dom:etree.Element}
+    :type active_dom: dict
+    :param context_doms: list containing dom dicts
+    :type context_doms: list
+    :param version: desired MEI-version
+    :type version: str
+    :param addargs: Addional arguments that are unused
+    """
+
+    root = active_dom["dom"]
+    active_dom["dom"] = root
+    output_message = ""
+    summary_message = ""
+
+    return active_dom, output_message, summary_message
 
 def add_sbs_every_n(
     active_dom: dict, context_doms: list, sbInterval: int, **addargs
