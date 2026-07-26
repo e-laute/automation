@@ -38,11 +38,6 @@ DEFAULT_TEMPLATE_PATH = Path(__file__).parent / "templates" / "meiHead_template.
 # ---------------------------------------------------------------------------
 # helpers
 # ---------------------------------------------------------------------------
-# NOTE: `_replace_first_comment` is written generically (it doesn't know or
-# care about meiHead/identifier/biblScope) and would apply to any XML
-# template that uses "<!-- placeholder -->" comments as fill-in markers.
-# If that pattern shows up elsewhere in the codebase, this is a good
-# candidate for utils.py; otherwise it can just stay local to this file.
  
 def _replace_first_comment(container, text):
     """
