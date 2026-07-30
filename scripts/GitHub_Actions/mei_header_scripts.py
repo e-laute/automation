@@ -117,7 +117,7 @@ def _split_filename(filename):
  
     :return: (idcombo, folio, line) or None if the filename does not match.
     """
-
+    print(filename)
     split = re.fullmatch(r"(.+_n\d+)_(.+)_enc_.+\.mei",filename)
 
     if split is None:
