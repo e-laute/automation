@@ -105,7 +105,7 @@ def _load_template_head(template_path: Path):
     return copy.deepcopy(new_head)
  
  
-def _split_filename(filename, notationtype):
+def _split_filename(filename):
     """
     Split a filename of the form
         (rism-code)_n(id)_(folio)(_line)?_enc_(notationtype).mei
@@ -117,27 +117,13 @@ def _split_filename(filename, notationtype):
  
     :return: (idcombo, folio, line) or None if the filename does not match.
     """
-    suffix = f"_enc_{notationtype}.mei"
-    if not filename.endswith(suffix):
+
+    split = re.fullmatch(r"(.+_n\d+)_(.+)_enc_.+\.mei",filename)
+
+    if split is None:
         return None
- 
-    prefix = filename[: -len(suffix)]
-    parts = prefix.split("_n", 1)
-    if len(parts) != 2:
-        return None
-    rism_part, rest = parts
- 
-    # `rest` now looks like "<id>_<folio>" or "<id>_<folio>_<line>"
-    rest_parts = rest.split("_")
-    if len(rest_parts) < 2 or not rest_parts[0].isdigit():
-        return None
- 
-    id_number = rest_parts[0]
-    folio = rest_parts[1]
-    line = "_".join(rest_parts[2:]) if len(rest_parts) > 2 else None
- 
-    idcombo = f"{rism_part}_n{id_number}"
-    return idcombo, folio, line
+    
+    return split.group(1),split.group(2)
  
  
 # ---------------------------------------------------------------------------
@@ -258,15 +244,14 @@ def add_header_from_template(active_dom: dict, context_doms: list, templatePath:
                 f"pattern for notationtype '{notationtype}'; skipped identifiers and biblScope. "
             )
         else:
-            idcombo, folio, line = split
+            idcombo, folio = split
  
             for identifier_el in new_head.findall(".//mei:identifier", namespaces=ns):
                 _replace_first_comment(identifier_el, idcombo)
  
             bibl_scope = new_head.find(".//mei:biblScope", namespaces=ns)
             if bibl_scope is not None:
-                folio_text = f"{folio}_{line}" if line else folio
-                _replace_first_comment(bibl_scope, folio_text)
+                _replace_first_comment(bibl_scope, folio)
  
     # -----------------------------------------------------------------
     # 5. editorialDecl - first <p> placeholder comment
