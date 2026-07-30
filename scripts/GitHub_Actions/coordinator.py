@@ -337,7 +337,6 @@ if __name__ == "__main__":
     parser = initialize_parser()
     args = parser.parse_args()
     main(
-        workpackage_id=args.workpackage_id,
         workpackage_json=args.workpackage_json,
         filepath=args.filepath,
         parameters=args.parameters,
