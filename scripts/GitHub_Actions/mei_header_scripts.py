@@ -206,7 +206,7 @@ def add_header_from_template(active_dom: dict, context_doms: list, templatePath:
     filename = active_dom.get("filename", "")
     filename = Path(filename).name if filename else ""
  
-    split = _split_filename(filename, notationtype) if filename and notationtype else None
+    split = _split_filename(filename) if filename else None
  
     if not notationtype or edtype not in ("ed", "dipl") or notation not in NOTATION_EXPANSIONS:
         output_message += (
