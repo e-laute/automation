@@ -32,7 +32,7 @@ EDITORIAL_GUIDELINES_TEXT = (
  
 # TODO: replace with real lookup of the meiHead template in the repository
 # (e.g. one template per notation type, or a single shared template).
-DEFAULT_TEMPLATE_PATH = Path(__file__).parent / "templates" / "meiHead_template.mei"
+DEFAULT_TEMPLATE_PATH = Path("caller-repo") / "templates" / "meiHead_template.mei"
  
  
 # ---------------------------------------------------------------------------
