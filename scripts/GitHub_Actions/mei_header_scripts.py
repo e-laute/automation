@@ -194,7 +194,7 @@ def add_header_from_template(active_dom: dict, context_doms: list, templatePath:
         if template_app_info is not None:
             new_encoding_desc.remove(template_app_info)
         if old_app_info is not None:
-            new_encoding_desc.append(copy.deepcopy(old_app_info))
+            new_encoding_desc.insert(0,copy.deepcopy(old_app_info)) # appInfo needs to be before editionDecl
     elif old_app_info is not None:
         output_message += "Warning: template has no encodingDesc - could not carry over appInfo. "
  
