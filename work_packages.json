@@ -28,7 +28,7 @@
           "default": ""
         }
       },
-      "scripts": ["script_collection.add_sbs_every_n"],
+      "scripts": ["mei_header_scripts.add_header_from_template"],
       "commitResult": true
     },
     {
@@ -68,7 +68,7 @@
         }
       },
       "scripts": [
-        "script_collection.add_header_from_context",
+        "mei_header_scripts.add_header_from_context",
         "script_collection.add_facs_from_context",
         "script_collection.add_section_foldir_from_context_to_ed",
         "script_collection.add_finis_to_last_measure",
@@ -135,7 +135,7 @@
           "default": "dipl_GLT"
         }
       },
-      "scripts": ["script_collection.add_header_from_context"],
+      "scripts": ["mei_header_scripts.add_header_from_context"],
       "commitResult": true
     },
     {
