@@ -105,19 +105,19 @@ def _load_template_head(template_path: Path):
     return copy.deepcopy(new_head)
  
  
-def _split_filename(filename, filetype):
+def _split_filename(filename, notationtype):
     """
     Split a filename of the form
-        (rism-code)_n(id)_(folio)(_line)?_enc_(filetype).mei
+        (rism-code)_n(id)_(folio)(_line)?_enc_(notationtype).mei
     into its idcombo ("A-Wn_Mus.Hs._18688_n05"), folio, and (optional) line parts.
  
-    `filetype` is the "(ed|dipl)_(CMN|GLT|ILT|FLT)" string as found in
-    active_dom["filetype"], reused here instead of re-deriving it from the
+    `notationtype` is the "(ed|dipl)_(CMN|GLT|ILT|FLT)" string as found in
+    active_dom["notationtype"], reused here instead of re-deriving it from the
     filename.
  
     :return: (idcombo, folio, line) or None if the filename does not match.
     """
-    suffix = f"_enc_{filetype}.mei"
+    suffix = f"_enc_{notationtype}.mei"
     if not filename.endswith(suffix):
         return None
  
@@ -152,8 +152,8 @@ def add_header_from_template(active_dom: dict, context_doms: list, templatePath:
       - encodingDesc/appInfo of the *old* meiHead is preserved (the template's
         empty appInfo is discarded)
       - the old meiHead's title text is written into the new title[@type='main']
-      - based on active_dom["filetype"] ("(ed|dipl)_(CMN|GLT|ILT|FLT)") and the
-        filename (rism-code)_n(id)_(folio)(_line)?_enc_(filetype).mei:
+      - based on active_dom["notationtype"] ("(ed|dipl)_(CMN|GLT|ILT|FLT)") and the
+        filename (rism-code)_n(id)_(folio)(_line)?_enc_(notationtype).mei:
           * title[@type='main']/titlePart[@type='subordinate'] gets
             "transcription in " / "edition in " + the notation-type <abbr>
           * editionStmt/edition text is rewritten
@@ -164,7 +164,7 @@ def add_header_from_template(active_dom: dict, context_doms: list, templatePath:
       - editorialDecl's first <p> comment is replaced with a link to the
         E-LAUTE edition guidelines
  
-    :param active_dom: dict containing {filename:Path/str?, notationtype:str, filetype:str, dom:etree.Element}
+    :param active_dom: dict containing {filename:Path/str?, notationtype:str, dom:etree.Element}
     :type active_dom: dict
     :param context_doms: list containing dom dicts
     :type context_doms: list
@@ -212,20 +212,20 @@ def add_header_from_template(active_dom: dict, context_doms: list, templatePath:
         new_title_main.text = old_title_text
  
     # -----------------------------------------------------------------
-    # 4. filetype / filename-based adjustments
+    # 4. notationtype / filename-based adjustments
     # -----------------------------------------------------------------
-    filetype = active_dom.get("filetype", "")  # e.g. "dipl_GLT"
-    edtype, _, notation = filetype.partition("_")
+    notationtype = active_dom.get("notationtype", "")  # e.g. "dipl_GLT"
+    edtype, _, notation = notationtype.partition("_")
  
     filename = active_dom.get("filename", "")
     filename = Path(filename).name if filename else ""
  
-    split = _split_filename(filename, filetype) if filename and filetype else None
+    split = _split_filename(filename, notationtype) if filename and notationtype else None
  
-    if not filetype or edtype not in ("ed", "dipl") or notation not in NOTATION_EXPANSIONS:
+    if not notationtype or edtype not in ("ed", "dipl") or notation not in NOTATION_EXPANSIONS:
         output_message += (
-            f"Warning: active_dom['filetype'] ('{filetype}') is missing or malformed; "
-            "skipped filetype-based header adjustments. "
+            f"Warning: active_dom['notationtype'] ('{notationtype}') is missing or malformed; "
+            "skipped notationtype-based header adjustments. "
         )
     else:
         is_edition = edtype == "ed"
@@ -255,7 +255,7 @@ def add_header_from_template(active_dom: dict, context_doms: list, templatePath:
         if split is None:
             output_message += (
                 f"Warning: filename '{filename}' did not match the expected naming "
-                f"pattern for filetype '{filetype}'; skipped identifiers and biblScope. "
+                f"pattern for notationtype '{notationtype}'; skipped identifiers and biblScope. "
             )
         else:
             idcombo, folio, line = split
