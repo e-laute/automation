@@ -32,7 +32,7 @@ EDITORIAL_GUIDELINES_TEXT = (
  
 # TODO: replace with real lookup of the meiHead template in the repository
 # (e.g. one template per notation type, or a single shared template).
-DEFAULT_TEMPLATE_PATH = Path(__file__).parent / "templates" / "meiHead_template.xml"
+DEFAULT_TEMPLATE_PATH = Path(__file__).parent / "templates" / "meiHead_template.mei"
  
  
 # ---------------------------------------------------------------------------
@@ -71,8 +71,16 @@ def _replace_first_comment(container, text):
     parent.remove(comment)
     return True
  
- 
-def _load_template_head(addargs):
+def _parse_template(path):
+    try:
+        return etree.parse(str(path), etree.XMLParser(recover=True))
+    except OSError as e:
+        raise RuntimeError(f"File error for {path}: {e}") from e
+    except etree.XMLSyntaxError as e:
+        raise RuntimeError(f"Parse error for {path}: {e}") from e
+
+
+def _load_template_head(template_path: Path):
     """
     Load and return a *copy* of the <meiHead> element from the (mei-rooted) template file.
  
@@ -80,12 +88,19 @@ def _load_template_head(addargs):
     type / source) is intentionally left out for now (see TODO above);
     callers may pass an explicit path via addargs["template_path"].
     """
-    template_path = Path(addargs.get("template_path", DEFAULT_TEMPLATE_PATH))
-    template_root = etree.parse(str(template_path)).getroot()
- 
+    if template_path is None:
+        template_path = DEFAULT_TEMPLATE_PATH
+    try:
+        template_tree = _parse_template(template_path)
+    except RuntimeError:
+        if template_path == DEFAULT_TEMPLATE_PATH:
+            raise
+    template_tree = _parse_template(DEFAULT_TEMPLATE_PATH)
+    template_root = template_tree.getroot()
+        
     new_head = template_root.find(".//mei:meiHead", namespaces=ns)
     if new_head is None:
-        raise ValueError(f"Template file '{template_path}' has no mei:meiHead element.")
+        raise RuntimeError(f"Template file '{template_path}' has no mei:meiHead element.")
  
     return copy.deepcopy(new_head)
  
@@ -129,7 +144,7 @@ def _split_filename(filename, filetype):
 # main function
 # ---------------------------------------------------------------------------
  
-def add_header_from_template(active_dom: dict, context_doms: list, **addargs):
+def add_header_from_template(active_dom: dict, context_doms: list, templatePath: str, **addargs):
     """
     Replace the meiHead of the active document with the meiHead of a template file.
  
@@ -162,13 +177,12 @@ def add_header_from_template(active_dom: dict, context_doms: list, **addargs):
  
     old_head = root.find(".//mei:meiHead", namespaces=ns)
     if old_head is None:
-        output_message = "No meiHead found in the active document - aborting."
-        return active_dom, output_message, summary_message
+        raise RuntimeError("No meiHead found in the active document - aborting.")
  
     # -----------------------------------------------------------------
     # 1. load template meiHead
     # -----------------------------------------------------------------
-    new_head = _load_template_head(addargs)
+    new_head = _load_template_head(Path(templatePath) if templatePath else None)
  
     # -----------------------------------------------------------------
     # 2. preserve old appInfo, drop the template's empty one

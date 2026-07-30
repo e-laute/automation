@@ -18,6 +18,20 @@
       "commitResult": true
     },
     {
+      "id": "header_from_template",
+      "label": "Add a header from a template",
+      "description": "Looks for templates/meiHead.mei (or a provided path) and subs meiHead in",
+      "userFacing": true,
+      "params": {
+        "templatePath": {
+          "type": "String",
+          "default": ""
+        }
+      },
+      "scripts": ["script_collection.add_sbs_every_n"],
+      "commitResult": true
+    },
+    {
       "id": "add_section_and_foldir_to_ed",
       "label": "Add section and dirs with folio to ed from getElemFrom",
       "description": "takes help_dom as context_dom and finds position of page beginnigs, adds them to ed_GLT or ed_CMN",
