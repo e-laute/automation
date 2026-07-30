@@ -171,7 +171,7 @@ def parse_and_wrap_dom(filepath: Path):
     """
     tree = etree.parse(filepath, etree.XMLParser(recover=True))
     root = tree.getroot()
-    filename = filepath.stem
+    filename = filepath.name
     notationtype = determine_notationtype(filename)
     return {
         "filename": filename,
