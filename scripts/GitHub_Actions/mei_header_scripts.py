@@ -109,15 +109,10 @@ def _split_filename(filename):
     """
     Split a filename of the form
         (rism-code)_n(id)_(folio)(_line)?_enc_(notationtype).mei
-    into its idcombo ("A-Wn_Mus.Hs._18688_n05"), folio, and (optional) line parts.
- 
-    `notationtype` is the "(ed|dipl)_(CMN|GLT|ILT|FLT)" string as found in
-    active_dom["notationtype"], reused here instead of re-deriving it from the
-    filename.
+    into its idcombo ("A-Wn_Mus.Hs._18688_n05") and folio
  
     :return: (idcombo, folio, line) or None if the filename does not match.
     """
-    print(filename)
     split = re.fullmatch(r"(.+_n\d+)_(.+)_enc_.+\.mei",filename)
 
     if split is None:
