@@ -130,7 +130,7 @@ if __name__ == "__main__":
         print("unknown workpackage-id")
         sys.exit(1)
     root = Path("caller-repo")
-    for root, dirs, filepaths in root.walk():
+    for walk_root, dirs, filepaths in root.walk():
         dirs.sort()
         if root_filter(root):
             continue
@@ -142,12 +142,12 @@ if __name__ == "__main__":
                 continue
             if exclude in exclude_files:
                 continue
-            print(f"Wrapper calls coordinator.main with{root / filepath}")
+            print(f"Wrapper calls coordinator.main with{walk_root / filepath}")
             try:
                 summary_message_current, error_message_current = (
                     coordinator.main(
                         workpackage_json=workpackage,
-                        filepath=str((root / filepath)),
+                        filepath=str(walk_root / filepath),
                         parameters=args.addargs,
                     )
                 )
