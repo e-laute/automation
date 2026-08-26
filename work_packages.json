@@ -159,7 +159,7 @@
         }
       },
       "scripts": ["sbs_and_pbs.orig_reg_sbs"],
-      "commitResult": false
+      "commitResult": true
     }
   ]
 }
