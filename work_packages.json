@@ -150,15 +150,15 @@
     {
       "id": "add_sbs_to_dipl",
       "label": "Adds sbs inside of orig, reg",
-      "description": "Adds a sbs Bbfore a given id, inside of a measure by splitting it in orig and keeping it in reg.",
+      "description": "Adds a sbs before a given id, inside of a measure by splitting it in orig and keeping it in reg.",
       "userFacing": true,
       "params": {
-        "sbId": {
+        "sbXmlId": {
           "type": "String",
           "default": ""
         }
       },
-      "scripts": ["script_collection.compare_mnums"],
+      "scripts": ["sbs_and_pbs.orig_reg_sbs"],
       "commitResult": false
     }
   ]
