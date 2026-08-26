@@ -222,7 +222,7 @@ def _split_off_before(container, target, letter, used_ids):
 # main function
 # ---------------------------------------------------------------------------
 
-def orig_reg_sbs(active_dom: dict, context_doms: list, sbXmlId: str, addargs):
+def orig_reg_sbs(active_dom: dict, context_doms: list, sbXmlId: str, **addargs):
     """
     For each xml:id in `sbXmlId`, resolve it to a <tabGrp> (an id may point directly
     at a tabGrp or at any of its descendants) and treat the tabGrp as a "here the
