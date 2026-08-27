@@ -289,9 +289,7 @@ def _place_breaks(active_dom: dict, xml_ids: list[str], tag: str, skip_first_con
         parent.insert(list(parent).index(measure), bare_break)
 
     if not valid_tabgrps:
-        summary_message = f"No mid-measure {tag}s could be processed."
-        active_dom["dom"] = root
-        return active_dom, output_message, summary_message
+        raise RuntimeError(f"No mid-measure {tag}s could be processed.")
 
     # --- group by ancestor measure, sort measures and tabGrps-within-measure ---
     # by document order, so a measure with several marked positions is only ever
@@ -327,14 +325,12 @@ def _place_breaks(active_dom: dict, xml_ids: list[str], tag: str, skip_first_con
         reg_el = etree.SubElement(choice_el, _mei("reg"))
         reg_el.set(XML_ID, _append_unique_id(measure_id, "-reg", used_ids))
 
-        # --- orig: a full copy of the measure, split at each marked position ---
+        # --- orig: the original, split at each marked position ---
         copy_measure = _deep_copy_with_appended_ids(measure, "-cp", used_ids)
-        target_paths = [_path_from(measure, tabgrp) for tabgrp in tabgrps_in_measure]
-        copy_targets = [_element_at_path(copy_measure, p) for p in target_paths]
 
         pieces = []
-        current_tail = copy_measure
-        for i, target in enumerate(copy_targets):
+        current_tail = measure
+        for i, target in enumerate(tabgrps_in_measure):
             pieces.append(_split_off_before(current_tail, target, _letter(i), used_ids))
         pieces.append(current_tail)
 
@@ -350,7 +346,7 @@ def _place_breaks(active_dom: dict, xml_ids: list[str], tag: str, skip_first_con
                 break_between.set(XML_ID, _append_unique_id(measure_id, f"-{tag}{_letter(i)}", used_ids))
                 orig_el.append(break_between)
 
-        # --- reg: the untouched original measure, with a single break placed on
+        # --- reg: a deep copy of the original measure, with a single break placed on
         # whichever side of it is closer to where the split(s) actually happen ---
         parent.remove(measure)
         reg_break = etree.Element(_mei(tag))
@@ -359,11 +355,11 @@ def _place_breaks(active_dom: dict, xml_ids: list[str], tag: str, skip_first_con
         first_piece_dur = dur_length(pieces[0])
         rest_dur = sum(dur_length(p) for p in pieces[1:])
         if first_piece_dur > rest_dur:
-            reg_el.append(measure)
+            reg_el.append(copy_measure)
             reg_el.append(reg_break)
         else:
             reg_el.append(reg_break)
-            reg_el.append(measure)
+            reg_el.append(copy_measure)
 
         parent.insert(measure_index, choice_el)
         processed_count += len(tabgrps_in_measure)
