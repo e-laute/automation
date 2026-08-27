@@ -469,9 +469,9 @@ def _add_dir(measure, tstamp, folio, used_ids):
     dir_el.set("place", "above")
     dir_el.set("staff", "1")
     dir_el.set("tstamp", str(tstamp))
-    dir_el.set("size", "xx-small")
     dir_el.set(XML_ID, _append_unique_id(measure.get(XML_ID) or "measure", "-dir", used_ids))
     dir_el.text = f"fol. {folio}"
+    etree.SubElement(dir_el, "rend", {"fontsize": "xx-small"})
     return dir_el
 
 
@@ -624,6 +624,8 @@ def fill_pb_info(active_dom: dict, context_doms: list, **addargs):
             output_message += f"Warning: choice '{choice.get(XML_ID)}' has no orig measure - reg dir not added.\n"
         else:
             tstamp = dur_to_tstamp(dur_length(first_orig_piece),root.find(".//mei:meterSig",namespaces=ns))
+            if tstamp is None:
+                print(dur_length(first_orig_piece),root.find(".//mei:meterSig",namespaces=ns))
             _add_dir(reg_measure, tstamp, assigned[orig_pb], used_ids)
 
     active_dom["dom"] = root
