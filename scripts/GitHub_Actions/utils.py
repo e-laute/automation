@@ -121,4 +121,4 @@ def dur_to_tstamp(dur: float, meterSig: etree.Element):
             raise RuntimeError(
                 "Could not calculate tstamp"
             )
-    return tstamp
+    return tstamp + 1
