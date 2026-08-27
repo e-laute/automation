@@ -262,6 +262,7 @@ def _place_breaks(active_dom: dict, xml_ids: list[str], tag: str, skip_first_con
         resolved_tabgrps.append(tabgrp)
 
     # --- handle tabGrps that are the first content of their layer --------------
+    between_measures_added = False
     valid_tabgrps = []
     for tabgrp in resolved_tabgrps:
         is_first, _layer = _is_first_content_of_layer(tabgrp)
@@ -287,9 +288,10 @@ def _place_breaks(active_dom: dict, xml_ids: list[str], tag: str, skip_first_con
         bare_break = etree.Element(_mei(tag))
         bare_break.set(XML_ID, _append_unique_id(measure.get(XML_ID) or tag, f"-{tag}", used_ids))
         parent.insert(list(parent).index(measure), bare_break)
+        between_measures_added = True
 
-    if not valid_tabgrps:
-        raise RuntimeError(f"No mid-measure {tag}s could be processed.")
+    if not valid_tabgrps or not between_measures_added:
+        raise RuntimeError(f"No {tag}s could be processed.")
 
     # --- group by ancestor measure, sort measures and tabGrps-within-measure ---
     # by document order, so a measure with several marked positions is only ever
