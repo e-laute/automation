@@ -106,3 +106,18 @@ def dur_length(elem: etree.Element, ignore=["sic", "orig"]):
         else:
             totaldur += dur_length(child)
     return totaldur
+
+def dur_to_tstamp(dur: float, meterSig: etree.Element):
+    
+    if meterSig is not None:
+        tstamp = dur * int(meterSig.get("unit", "4"))
+    else:
+        tstamp = dur * 4
+        for _ in range(10):
+            if tstamp.is_integer():
+                break
+            tstamp *= 2
+        else:
+            raise RuntimeError(
+                "Could not calculate tstamp"
+            )
