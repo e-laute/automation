@@ -1,5 +1,6 @@
 import copy
 import re
+import bisect
 
 from lxml import etree
 from utils import dur_length, dur_to_tstamp
@@ -92,6 +93,7 @@ def _letter(i):
         i, rem = divmod(i - 1, 26)
         out = chr(97 + rem) + out
     return out
+
 
 
 # ---------------------------------------------------------------------------
@@ -243,13 +245,14 @@ def _place_breaks(active_dom: dict, xml_ids: list[str], tag: str, skip_first_con
         resolved_tabgrps.append(tabgrp)
 
     # --- handle tabGrps that are the first content of their layer --------------
-    between_measures_added = False
+    between_measures_added = 0
     valid_tabgrps = []
     for tabgrp in resolved_tabgrps:
+        if _nearest_ancestor(tabgrp, "orig") is not None or _nearest_ancestor(tabgrp, "reg") is not None:
+            output_message += (f"Warning: tabGrp in measure number {_nearest_ancestor(tabgrp, "measure").get("n","unknown")} is already in orig_reg, ignored.")
+            continue
         is_first, _layer = _is_first_content_of_layer(tabgrp)
         if not is_first:
-            if _nearest_ancestor(tabgrp, "orig") is not None or _nearest_ancestor(tabgrp, "reg") is not None:
-                raise RuntimeError(f"Warning: tabGrp in measure number {_nearest_ancestor(tabgrp, "measure").get("n","unknown")} is already in orig_reg, ignored.")
             valid_tabgrps.append(tabgrp)
             continue
 
@@ -271,9 +274,9 @@ def _place_breaks(active_dom: dict, xml_ids: list[str], tag: str, skip_first_con
         bare_break = etree.Element(_mei(tag))
         bare_break.set(XML_ID, _append_unique_id(measure.get(XML_ID) or tag, f"-{tag}", used_ids))
         parent.insert(list(parent).index(measure), bare_break)
-        between_measures_added = True
+        between_measures_added += 1
 
-    if not valid_tabgrps and not between_measures_added:
+    if not valid_tabgrps and between_measures_added == 0:
         raise RuntimeError(f"No {tag}s could be processed.")
 
     # --- group by ancestor measure, sort measures and tabGrps-within-measure ---
@@ -353,7 +356,7 @@ def _place_breaks(active_dom: dict, xml_ids: list[str], tag: str, skip_first_con
     active_dom["dom"] = root
     summary_message = (
         f"Created {len(ordered_measures)} choice/orig/reg alternative(s) "
-        f"covering {processed_count} {tag}(s)."
+        f"covering {processed_count+between_measures_added} {tag}(s)."
     )
     return active_dom, output_message, summary_message
 
@@ -383,7 +386,7 @@ def orig_reg_sbs(active_dom: dict, context_doms: list, sbXmlId: str, **addargs):
     :param sbXmlId: string of xml:id seperated by comma marking tabGrps where a system break occurs
     :param addargs: additional arguments (unused)
     """
-    return _place_breaks(active_dom, sbXmlId.split(","), tag="sb", skip_first_content=True)
+    return _place_breaks(active_dom, [id.strip for id in sbXmlId.split(",")], tag="sb", skip_first_content=True)
 
 
 def add_pbs_id(active_dom: dict, context_doms: list, sbXmlId: str, **addargs):
@@ -409,7 +412,7 @@ def add_pbs_id(active_dom: dict, context_doms: list, sbXmlId: str, **addargs):
     :param sbXmlId: string of xml:id seperated by comma marking where the page break occurs
     :param addargs: additional arguments (unused)
     """
-    return _place_breaks(active_dom, sbXmlId.split(","), tag="pb", skip_first_content=False)
+    return _place_breaks(active_dom, [id.strip for id in sbXmlId.split(",")], tag="pb", skip_first_content=False)
 
 
 # ---------------------------------------------------------------------------
@@ -520,12 +523,22 @@ def fill_pb_info(active_dom: dict, context_doms: list, **addargs):
     used_ids = set(root.xpath(".//@xml:id", namespaces=ns))
     doc_order = {el: i for i, el in enumerate(root.iter())}
 
+    meter_sigs = sorted(root.findall(".//mei:meterSig", namespaces=ns), key=lambda m: doc_order[m])
+    meter_sig_positions = [doc_order[m] for m in meter_sigs]
+
+    def _meter_sig_for(measure):
+        """The last <meterSig> at or before `measure` in document order, or None if the
+        piece's meter is only declared via scoreDef/staffDef attributes with no literal
+        <meterSig> element preceding this point."""
+        idx = bisect.bisect_right(meter_sig_positions, doc_order[measure]) - 1
+        return meter_sigs[idx] if idx >= 0 else None
+
     section = root.find(".//mei:section",namespaces=ns)
     for child in section.iter():
         if _localname(child) == "pb":
             break
         if _localname(child) == "measure":
-            section.insert(0,etree.Element("pb"))
+            section.insert(0,etree.Element(_mei("pb"))).set(XML_ID, _append_unique_id(section.get(XML_ID) or "measure", "-pb1", used_ids))
 
     # --- group the remaining pbs by their enclosing choice (if any) ------------
     choices = {}  # choice_el -> {"orig": [...], "reg": [...]}
@@ -610,7 +623,7 @@ def fill_pb_info(active_dom: dict, context_doms: list, **addargs):
         elif first_orig_piece is None:
             output_message += f"Warning: choice '{choice.get(XML_ID)}' has no orig measure - reg dir not added.\n"
         else:
-            tstamp = dur_to_tstamp(dur_length(first_orig_piece),root.find(".//mei:meterSig",namespaces=ns))
+            tstamp = dur_to_tstamp(dur_length(first_orig_piece), _meter_sig_for(first_orig_piece))
             _add_dir(reg_measure, tstamp, assigned[orig_pb], used_ids)
 
     active_dom["dom"] = root
