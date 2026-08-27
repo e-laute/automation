@@ -464,6 +464,9 @@ def _measure_after(pb):
 
 
 def _add_dir(measure, tstamp, folio, used_ids):
+    old_dirs = measure.findall("mei:dir[@type='ref']",namespaces=ns)
+    for old_dir in old_dirs:
+        measure.remove(old_dir)
     dir_el = etree.SubElement(measure, _mei("dir"))
     dir_el.set("type", "ref")
     dir_el.set("place", "above")
