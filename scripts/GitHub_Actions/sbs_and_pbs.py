@@ -328,6 +328,8 @@ def _place_breaks(active_dom: dict, xml_ids: list[str], tag: str, skip_first_con
         # --- orig: the original, split at each marked position ---
         copy_measure = _deep_copy_with_appended_ids(measure, "-cp", used_ids)
 
+
+        parent.remove(measure)
         pieces = []
         current_tail = measure
         for i, target in enumerate(tabgrps_in_measure):
@@ -348,7 +350,6 @@ def _place_breaks(active_dom: dict, xml_ids: list[str], tag: str, skip_first_con
 
         # --- reg: a deep copy of the original measure, with a single break placed on
         # whichever side of it is closer to where the split(s) actually happen ---
-        parent.remove(measure)
         reg_break = etree.Element(_mei(tag))
         reg_break.set(XML_ID, _append_unique_id(measure_id, f"-{tag}", used_ids))
 
