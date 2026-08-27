@@ -236,7 +236,7 @@ def _place_breaks(active_dom: dict, xml_ids: list[str], tag: str, skip_first_con
         raise RuntimeError(f"{active_dom["filename"]} is not dipl")
     output_message = ""
     root = active_dom["dom"]
-    staffDef = root.find("mei:staffDef",namespaces=ns)
+    staffDef = root.find(".//mei:staffDef",namespaces=ns)
     if staffDef is None or not staffDef.get("notationtype","").startswith("tab.lute"):
         raise RuntimeError(f"{active_dom["filename"]} is not tablature")
     used_ids = set(root.xpath(".//@xml:id", namespaces=ns))
