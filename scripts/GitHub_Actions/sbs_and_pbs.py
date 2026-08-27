@@ -83,25 +83,6 @@ def _ancestors_between(target, stop):
     return chain
 
 
-def _path_from(ancestor, descendant):
-    """Child-index path from `ancestor` down to `descendant` (list of ints)."""
-    path = []
-    node = descendant
-    while node is not ancestor:
-        parent = node.getparent()
-        path.append(list(parent).index(node))
-        node = parent
-    path.reverse()
-    return path
-
-
-def _element_at_path(el, path):
-    node = el
-    for i in path:
-        node = list(node)[i]
-    return node
-
-
 def _letter(i):
     """0 -> 'a', 1 -> 'b', ..., 25 -> 'z', 26 -> 'aa', ... (spreadsheet-column style,
     in case a measure ever has more than 26 marked positions)."""
@@ -267,6 +248,8 @@ def _place_breaks(active_dom: dict, xml_ids: list[str], tag: str, skip_first_con
     for tabgrp in resolved_tabgrps:
         is_first, _layer = _is_first_content_of_layer(tabgrp)
         if not is_first:
+            if _nearest_ancestor(tabgrp, "orig") is not None or _nearest_ancestor(tabgrp, "reg") is not None:
+                raise RuntimeError(f"Warning: tabGrp in measure number {_nearest_ancestor(tabgrp, "measure").get("n","unknown")} is already in orig_reg, ignored.")
             valid_tabgrps.append(tabgrp)
             continue
 
