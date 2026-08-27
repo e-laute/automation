@@ -290,7 +290,7 @@ def _place_breaks(active_dom: dict, xml_ids: list[str], tag: str, skip_first_con
         parent.insert(list(parent).index(measure), bare_break)
         between_measures_added = True
 
-    if not valid_tabgrps or not between_measures_added:
+    if not valid_tabgrps and not between_measures_added:
         raise RuntimeError(f"No {tag}s could be processed.")
 
     # --- group by ancestor measure, sort measures and tabGrps-within-measure ---
