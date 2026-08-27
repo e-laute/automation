@@ -470,8 +470,9 @@ def _add_dir(measure, tstamp, folio, used_ids):
     dir_el.set("staff", "1")
     dir_el.set("tstamp", str(tstamp))
     dir_el.set(XML_ID, _append_unique_id(measure.get(XML_ID) or "measure", "-dir", used_ids))
-    dir_el.text = f"fol. {folio}"
-    etree.SubElement(dir_el, "rend", {"fontsize": "xx-small"})
+    rend_el = etree.SubElement(dir_el, "rend", {"fontsize": "xx-small", 
+                                                "fontstyle": "normal"})
+    rend_el.text = f"fol. {folio}"
     return dir_el
 
 
