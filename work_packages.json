@@ -160,6 +160,20 @@
       },
       "scripts": ["sbs_and_pbs.orig_reg_sbs"],
       "commitResult": true
+    },
+    {
+      "id": "add_pbs_to_dipl",
+      "label": "Adds pbs with facs and folio",
+      "description": "Adds a pb before a given id with @n and @facs, adds a dir, adds orig and reg if necessary.",
+      "userFacing": true,
+      "params": {
+        "sbXmlId": {
+          "type": "String",
+          "default": ""
+        }
+      },
+      "scripts": ["sbs_and_pbs.add_pbs_id", "sbs_and_pbs.fill_pb_info"],
+      "commitResult": true
     }
   ]
 }
