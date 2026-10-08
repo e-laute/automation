@@ -1,6 +1,6 @@
 {
   "central_repository": "e-laute/automation",
-  "branch": "main",
+  "branch": "develop",
   "automation_path": "run_automation.sh",
   "work_packages": [
     {
